@@ -1,0 +1,1503 @@
+[
+ {
+  "inputs": [
+   {
+    "internalType": "contract IERC20",
+    "name": "quote_",
+    "type": "address"
+   },
+   {
+    "internalType": "contract ISwapRouter02",
+    "name": "router_",
+    "type": "address"
+   },
+   {
+    "internalType": "address",
+    "name": "agent_",
+    "type": "address"
+   },
+   {
+    "components": [
+     {
+      "internalType": "uint16",
+      "name": "maxPositionBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxExposureBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxDailyLossBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxSlippageBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxStopSlippageBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "minStopTicks",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxStopTicks",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxTakeProfitTicks",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxTwapDeviationTicks",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "keeperRewardBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint32",
+      "name": "twapWindow",
+      "type": "uint32"
+     },
+     {
+      "internalType": "uint32",
+      "name": "cooldown",
+      "type": "uint32"
+     },
+     {
+      "internalType": "uint32",
+      "name": "heartbeatTimeout",
+      "type": "uint32"
+     }
+    ],
+    "internalType": "struct KavachVault.Policy",
+    "name": "policy_",
+    "type": "tuple"
+   }
+  ],
+  "stateMutability": "nonpayable",
+  "type": "constructor"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "readyAt",
+    "type": "uint256"
+   }
+  ],
+  "name": "Cooldown",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "lossBps",
+    "type": "uint256"
+   },
+   {
+    "internalType": "uint256",
+    "name": "maxLossBps",
+    "type": "uint256"
+   }
+  ],
+  "name": "DailyLossLimit",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "exposureAfter",
+    "type": "uint256"
+   },
+   {
+    "internalType": "uint256",
+    "name": "maxExposure",
+    "type": "uint256"
+   }
+  ],
+  "name": "ExposureTooHigh",
+  "type": "error"
+ },
+ {
+  "inputs": [],
+  "name": "InvalidPolicy",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "base",
+    "type": "address"
+   }
+  ],
+  "name": "MarketDisabled",
+  "type": "error"
+ },
+ {
+  "inputs": [],
+  "name": "NotAgent",
+  "type": "error"
+ },
+ {
+  "inputs": [],
+  "name": "NotAgentOrOwner",
+  "type": "error"
+ },
+ {
+  "inputs": [],
+  "name": "NotOwner",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "int32",
+    "name": "priceTick",
+    "type": "int32"
+   },
+   {
+    "internalType": "int32",
+    "name": "stopPriceTick",
+    "type": "int32"
+   },
+   {
+    "internalType": "int32",
+    "name": "takeProfitPriceTick",
+    "type": "int32"
+   }
+  ],
+  "name": "NotTriggered",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "id",
+    "type": "uint256"
+   }
+  ],
+  "name": "PositionNotOpen",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "quoteIn",
+    "type": "uint256"
+   },
+   {
+    "internalType": "uint256",
+    "name": "maxQuoteIn",
+    "type": "uint256"
+   }
+  ],
+  "name": "PositionTooLarge",
+  "type": "error"
+ },
+ {
+  "inputs": [],
+  "name": "ReentrancyGuardReentrantCall",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "token",
+    "type": "address"
+   }
+  ],
+  "name": "SafeERC20FailedOperation",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "int32",
+    "name": "requested",
+    "type": "int32"
+   },
+   {
+    "internalType": "int32",
+    "name": "priceTick",
+    "type": "int32"
+   }
+  ],
+  "name": "StopAboveMarket",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "int32",
+    "name": "current",
+    "type": "int32"
+   },
+   {
+    "internalType": "int32",
+    "name": "requested",
+    "type": "int32"
+   }
+  ],
+  "name": "StopCanOnlyTighten",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint16",
+    "name": "stopTicks",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint16",
+    "name": "minTicks",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint16",
+    "name": "maxTicks",
+    "type": "uint16"
+   }
+  ],
+  "name": "StopOutOfRange",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint16",
+    "name": "tpTicks",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint16",
+    "name": "maxTicks",
+    "type": "uint16"
+   }
+  ],
+  "name": "TakeProfitOutOfRange",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "int24",
+    "name": "tick",
+    "type": "int24"
+   }
+  ],
+  "name": "TickOutOfRange",
+  "type": "error"
+ },
+ {
+  "inputs": [],
+  "name": "TooManyPositions",
+  "type": "error"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "int24",
+    "name": "spotTick",
+    "type": "int24"
+   },
+   {
+    "internalType": "int24",
+    "name": "twapTick",
+    "type": "int24"
+   },
+   {
+    "internalType": "uint16",
+    "name": "maxDeviation",
+    "type": "uint16"
+   }
+  ],
+  "name": "TwapDeviation",
+  "type": "error"
+ },
+ {
+  "inputs": [],
+  "name": "VaultPaused",
+  "type": "error"
+ },
+ {
+  "inputs": [],
+  "name": "ZeroAddress",
+  "type": "error"
+ },
+ {
+  "inputs": [],
+  "name": "ZeroAmount",
+  "type": "error"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "agent",
+    "type": "address"
+   }
+  ],
+  "name": "AgentChanged",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "seq",
+    "type": "uint256"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "base",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "string",
+    "name": "action",
+    "type": "string"
+   },
+   {
+    "indexed": false,
+    "internalType": "string",
+    "name": "reason",
+    "type": "string"
+   }
+  ],
+  "name": "Decision",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "from",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "amount",
+    "type": "uint256"
+   }
+  ],
+  "name": "Deposited",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "agent",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "at",
+    "type": "uint256"
+   }
+  ],
+  "name": "Heartbeat",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "base",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "address",
+    "name": "pool",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint24",
+    "name": "fee",
+    "type": "uint24"
+   },
+   {
+    "indexed": false,
+    "internalType": "bool",
+    "name": "baseIsToken0",
+    "type": "bool"
+   },
+   {
+    "indexed": false,
+    "internalType": "bool",
+    "name": "enabled",
+    "type": "bool"
+   }
+  ],
+  "name": "MarketSet",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "owner",
+    "type": "address"
+   }
+  ],
+  "name": "OwnerChanged",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": false,
+    "internalType": "bool",
+    "name": "paused",
+    "type": "bool"
+   }
+  ],
+  "name": "PausedSet",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "components": [
+     {
+      "internalType": "uint16",
+      "name": "maxPositionBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxExposureBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxDailyLossBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxSlippageBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxStopSlippageBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "minStopTicks",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxStopTicks",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxTakeProfitTicks",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxTwapDeviationTicks",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "keeperRewardBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint32",
+      "name": "twapWindow",
+      "type": "uint32"
+     },
+     {
+      "internalType": "uint32",
+      "name": "cooldown",
+      "type": "uint32"
+     },
+     {
+      "internalType": "uint32",
+      "name": "heartbeatTimeout",
+      "type": "uint32"
+     }
+    ],
+    "indexed": false,
+    "internalType": "struct KavachVault.Policy",
+    "name": "policy",
+    "type": "tuple"
+   }
+  ],
+  "name": "PolicyChanged",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "id",
+    "type": "uint256"
+   },
+   {
+    "indexed": true,
+    "internalType": "enum KavachVault.CloseReason",
+    "name": "why",
+    "type": "uint8"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "quoteOut",
+    "type": "uint256"
+   },
+   {
+    "indexed": false,
+    "internalType": "int256",
+    "name": "pnl",
+    "type": "int256"
+   },
+   {
+    "indexed": false,
+    "internalType": "address",
+    "name": "closer",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "keeperReward",
+    "type": "uint256"
+   }
+  ],
+  "name": "PositionClosed",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "id",
+    "type": "uint256"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "base",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "quoteIn",
+    "type": "uint256"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "baseOut",
+    "type": "uint256"
+   },
+   {
+    "indexed": false,
+    "internalType": "int32",
+    "name": "entryPriceTick",
+    "type": "int32"
+   },
+   {
+    "indexed": false,
+    "internalType": "int32",
+    "name": "stopPriceTick",
+    "type": "int32"
+   },
+   {
+    "indexed": false,
+    "internalType": "int32",
+    "name": "takeProfitPriceTick",
+    "type": "int32"
+   },
+   {
+    "indexed": false,
+    "internalType": "string",
+    "name": "reason",
+    "type": "string"
+   }
+  ],
+  "name": "PositionOpened",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "uint256",
+    "name": "id",
+    "type": "uint256"
+   },
+   {
+    "indexed": false,
+    "internalType": "int32",
+    "name": "stopPriceTick",
+    "type": "int32"
+   },
+   {
+    "indexed": false,
+    "internalType": "int32",
+    "name": "takeProfitPriceTick",
+    "type": "int32"
+   }
+  ],
+  "name": "StopAdjusted",
+  "type": "event"
+ },
+ {
+  "anonymous": false,
+  "inputs": [
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "token",
+    "type": "address"
+   },
+   {
+    "indexed": true,
+    "internalType": "address",
+    "name": "to",
+    "type": "address"
+   },
+   {
+    "indexed": false,
+    "internalType": "uint256",
+    "name": "amount",
+    "type": "uint256"
+   }
+  ],
+  "name": "Withdrawn",
+  "type": "event"
+ },
+ {
+  "inputs": [],
+  "name": "MAX_KEEPER_REWARD_BPS",
+  "outputs": [
+   {
+    "internalType": "uint16",
+    "name": "",
+    "type": "uint16"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "MAX_OPEN_POSITIONS",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "id",
+    "type": "uint256"
+   }
+  ],
+  "name": "abandonPosition",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "id",
+    "type": "uint256"
+   },
+   {
+    "internalType": "int32",
+    "name": "newStopPriceTick",
+    "type": "int32"
+   },
+   {
+    "internalType": "int32",
+    "name": "newTakeProfitPriceTick",
+    "type": "int32"
+   }
+  ],
+  "name": "adjustStop",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "agent",
+  "outputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "id",
+    "type": "uint256"
+   },
+   {
+    "internalType": "string",
+    "name": "reason",
+    "type": "string"
+   }
+  ],
+  "name": "closePosition",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "base",
+    "type": "address"
+   }
+  ],
+  "name": "currentTwapTick",
+  "outputs": [
+   {
+    "internalType": "int24",
+    "name": "",
+    "type": "int24"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "dayStart",
+  "outputs": [
+   {
+    "internalType": "uint64",
+    "name": "",
+    "type": "uint64"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "dayStartEquity",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "decisionCount",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "amount",
+    "type": "uint256"
+   }
+  ],
+  "name": "deposit",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "equity",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "total",
+    "type": "uint256"
+   },
+   {
+    "internalType": "uint256",
+    "name": "exposure",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "getMarkets",
+  "outputs": [
+   {
+    "internalType": "address[]",
+    "name": "",
+    "type": "address[]"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "heartbeat",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "isDeadManTriggered",
+  "outputs": [
+   {
+    "internalType": "bool",
+    "name": "",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "id",
+    "type": "uint256"
+   }
+  ],
+  "name": "keeperClose",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "id",
+    "type": "uint256"
+   }
+  ],
+  "name": "keeperStatus",
+  "outputs": [
+   {
+    "internalType": "uint8",
+    "name": "status",
+    "type": "uint8"
+   },
+   {
+    "internalType": "int32",
+    "name": "priceTick",
+    "type": "int32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "lastHeartbeat",
+  "outputs": [
+   {
+    "internalType": "uint64",
+    "name": "",
+    "type": "uint64"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "lastOpenAt",
+  "outputs": [
+   {
+    "internalType": "uint64",
+    "name": "",
+    "type": "uint64"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "base",
+    "type": "address"
+   },
+   {
+    "internalType": "string",
+    "name": "action",
+    "type": "string"
+   },
+   {
+    "internalType": "string",
+    "name": "reason",
+    "type": "string"
+   }
+  ],
+  "name": "logDecision",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "name": "marketList",
+  "outputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "base",
+    "type": "address"
+   }
+  ],
+  "name": "markets",
+  "outputs": [
+   {
+    "internalType": "address",
+    "name": "pool",
+    "type": "address"
+   },
+   {
+    "internalType": "uint24",
+    "name": "fee",
+    "type": "uint24"
+   },
+   {
+    "internalType": "bool",
+    "name": "baseIsToken0",
+    "type": "bool"
+   },
+   {
+    "internalType": "bool",
+    "name": "enabled",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "base",
+    "type": "address"
+   },
+   {
+    "internalType": "uint256",
+    "name": "quoteIn",
+    "type": "uint256"
+   },
+   {
+    "internalType": "uint16",
+    "name": "stopTicks",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint16",
+    "name": "takeProfitTicks",
+    "type": "uint16"
+   },
+   {
+    "internalType": "string",
+    "name": "reason",
+    "type": "string"
+   }
+  ],
+  "name": "openPosition",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "id",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "openPositionIds",
+  "outputs": [
+   {
+    "internalType": "uint256[]",
+    "name": "",
+    "type": "uint256[]"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "owner",
+  "outputs": [
+   {
+    "internalType": "address",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "paused",
+  "outputs": [
+   {
+    "internalType": "bool",
+    "name": "",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "policy",
+  "outputs": [
+   {
+    "internalType": "uint16",
+    "name": "maxPositionBps",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint16",
+    "name": "maxExposureBps",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint16",
+    "name": "maxDailyLossBps",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint16",
+    "name": "maxSlippageBps",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint16",
+    "name": "maxStopSlippageBps",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint16",
+    "name": "minStopTicks",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint16",
+    "name": "maxStopTicks",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint16",
+    "name": "maxTakeProfitTicks",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint16",
+    "name": "maxTwapDeviationTicks",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint16",
+    "name": "keeperRewardBps",
+    "type": "uint16"
+   },
+   {
+    "internalType": "uint32",
+    "name": "twapWindow",
+    "type": "uint32"
+   },
+   {
+    "internalType": "uint32",
+    "name": "cooldown",
+    "type": "uint32"
+   },
+   {
+    "internalType": "uint32",
+    "name": "heartbeatTimeout",
+    "type": "uint32"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "name": "positions",
+  "outputs": [
+   {
+    "internalType": "address",
+    "name": "base",
+    "type": "address"
+   },
+   {
+    "internalType": "uint128",
+    "name": "baseAmount",
+    "type": "uint128"
+   },
+   {
+    "internalType": "uint128",
+    "name": "quoteIn",
+    "type": "uint128"
+   },
+   {
+    "internalType": "int32",
+    "name": "entryPriceTick",
+    "type": "int32"
+   },
+   {
+    "internalType": "int32",
+    "name": "stopPriceTick",
+    "type": "int32"
+   },
+   {
+    "internalType": "int32",
+    "name": "takeProfitPriceTick",
+    "type": "int32"
+   },
+   {
+    "internalType": "uint64",
+    "name": "openedAt",
+    "type": "uint64"
+   },
+   {
+    "internalType": "bool",
+    "name": "open",
+    "type": "bool"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "positionsCount",
+  "outputs": [
+   {
+    "internalType": "uint256",
+    "name": "",
+    "type": "uint256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "quote",
+  "outputs": [
+   {
+    "internalType": "contract IERC20",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "realizedPnl",
+  "outputs": [
+   {
+    "internalType": "int256",
+    "name": "",
+    "type": "int256"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [],
+  "name": "router",
+  "outputs": [
+   {
+    "internalType": "contract ISwapRouter02",
+    "name": "",
+    "type": "address"
+   }
+  ],
+  "stateMutability": "view",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "agent_",
+    "type": "address"
+   }
+  ],
+  "name": "setAgent",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "base",
+    "type": "address"
+   },
+   {
+    "internalType": "address",
+    "name": "pool",
+    "type": "address"
+   },
+   {
+    "internalType": "bool",
+    "name": "enabled",
+    "type": "bool"
+   }
+  ],
+  "name": "setMarket",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "bool",
+    "name": "paused_",
+    "type": "bool"
+   }
+  ],
+  "name": "setPaused",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "components": [
+     {
+      "internalType": "uint16",
+      "name": "maxPositionBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxExposureBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxDailyLossBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxSlippageBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxStopSlippageBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "minStopTicks",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxStopTicks",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxTakeProfitTicks",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "maxTwapDeviationTicks",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint16",
+      "name": "keeperRewardBps",
+      "type": "uint16"
+     },
+     {
+      "internalType": "uint32",
+      "name": "twapWindow",
+      "type": "uint32"
+     },
+     {
+      "internalType": "uint32",
+      "name": "cooldown",
+      "type": "uint32"
+     },
+     {
+      "internalType": "uint32",
+      "name": "heartbeatTimeout",
+      "type": "uint32"
+     }
+    ],
+    "internalType": "struct KavachVault.Policy",
+    "name": "policy_",
+    "type": "tuple"
+   }
+  ],
+  "name": "setPolicy",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "address",
+    "name": "owner_",
+    "type": "address"
+   }
+  ],
+  "name": "transferOwnership",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ },
+ {
+  "inputs": [
+   {
+    "internalType": "contract IERC20",
+    "name": "token",
+    "type": "address"
+   },
+   {
+    "internalType": "uint256",
+    "name": "amount",
+    "type": "uint256"
+   },
+   {
+    "internalType": "address",
+    "name": "to",
+    "type": "address"
+   }
+  ],
+  "name": "withdraw",
+  "outputs": [],
+  "stateMutability": "nonpayable",
+  "type": "function"
+ }
+]

@@ -1,0 +1,6 @@
+node_modules/
+.env
+agent/data/
+contracts/artifacts/
+contracts/cache/
+.DS_Store
