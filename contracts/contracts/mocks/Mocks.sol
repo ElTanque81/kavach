@@ -122,3 +122,15 @@ contract TickMathHarness {
         return TickMath.getSqrtRatioAtTick(tick);
     }
 }
+
+contract MockWETH is ERC20 {
+    constructor() ERC20("Wrapped HSK", "WHSK") {}
+
+    function deposit() external payable {
+        _mint(msg.sender, msg.value);
+    }
+
+    function mint(address to, uint256 amount) external {
+        _mint(to, amount);
+    }
+}

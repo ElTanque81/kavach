@@ -28,13 +28,14 @@ AI Agent Trading
 - Uniswap TickMath ported to Solidity 0.8, constants verified at 120-digit precision and against a live `slot0` from HSK Chain mainnet.
 - Three run modes: sim (offline), paper (live prices, no tx), live (mainnet).
 
-**Deployed on HSK Chain mainnet**
-- KavachVault: `0x…` (fill in) – https://hsk.blockscout.com/address/0x…
-- Deploy tx: https://hsk.blockscout.com/tx/0x…
+**Deployed on HSK Chain testnet** (organizers confirmed testnet is sufficient; mainnet script is ready)
+- KavachVault: `0x560295F23c699c97C35368B34FcFDFAD83780A2D` – https://testnet-explorer.hskchain.net/address/0x560295F23c699c97C35368B34FcFDFAD83780A2D
+- Agent opens a position (stop/take-profit stored on-chain): https://testnet-explorer.hskchain.net/tx/0x7a981cc48ee2d761c01de61475abe1ba9dd97df88d0dbf9dab3eda5bea4591eb
+- Agent goes silent, a keeper closes it via the dead-man switch: https://testnet-explorer.hskchain.net/tx/0x55adb894239616e303689d923a0a01d832674839331c255482a189cf72b55f7e
 
 **Links**
 - GitHub: https://github.com/ElTanque81/kavach
-- Demo video: (YouTube link)
+- Demo video: https://youtu.be/ooxRfDhLhd0
 
 ## Demo video script (≈ 2:30)
 

@@ -185,6 +185,9 @@ export class SimFeed {
     this.t += config.simSecondsPerTick;
     for (const [sym, s] of Object.entries(this.state)) {
       if (this.rand() < 0.02) s.drift = (this.rand() - 0.5) * s.vol * 0.8; // regime change
+      s.p0 ??= s.p; // anchor: keep long sim runs near today's real prices
+      s.drift += Math.log(s.p0 / s.p) * 0.004;
+      s.drift = Math.max(-s.vol, Math.min(s.vol, s.drift));
       let r = s.drift + s.vol * gauss(this.rand);
       if (this.shock && this.shock.sym === sym && this.shock.steps > 0) {
         r += this.shock.pct / this.shock.total;

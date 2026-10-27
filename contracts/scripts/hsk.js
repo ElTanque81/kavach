@@ -38,3 +38,30 @@ module.exports = {
     heartbeatTimeout: 3600, // dead-man switch after 1h of agent silence
   },
 };
+
+// HSK Chain testnet (chain 133): HSKSwap testnet deployment, verified on-chain on 2026-10-27
+// (router02.factory() == v3Factory, router02.WETH9() == WHSK, WHSK/USDT 0.3% pool with liquidity).
+module.exports.testnet = {
+  chainId: 133,
+  explorer: "https://testnet-explorer.hskchain.net",
+  hskswap: {
+    v3Factory: "0x2dC2c21D1049F786C535bF9d45F999dB5474f3A0",
+    swapRouter02: "0xa6914E66690c6794244B5f66a09eAEbf66254237",
+    quoterV2: "0x73820d9eE5Bf1BfcD429580320FC7A374E8fa1cC",
+    positionManager: "0x73dEc6bfa6751509b08480bd97f54b874E3b20e8",
+  },
+  tokens: {
+    USDT: { address: "0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F", decimals: 18 },
+    WHSK: { address: "0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6", decimals: 18 },
+  },
+  pools: {
+    WHSK: "0xc076fb478b77633736738579c7f48d2539604a50",
+  },
+  // same rules as mainnet, with short timers so the dead-man switch can be shown live
+  policy: {
+    ...module.exports.policy,
+    maxTwapDeviationTicks: 200,
+    twapWindow: 60, // 1-minute TWAP
+    heartbeatTimeout: 300, // dead-man switch after 5 minutes (contract minimum)
+  },
+};

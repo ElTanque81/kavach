@@ -1,5 +1,6 @@
-// Deploys KavachVault to HSK Chain mainnet against the real HSKSwap V3 router and pools.
+// Deploys KavachVault to HSK Chain (mainnet or testnet) against the real HSKSwap V3 router and pools.
 //
+//   npx hardhat run scripts/deploy.js --network hskTestnet   (testnet, chain 133)
 //   npx hardhat run scripts/deploy.js --network hsk
 //   DRY_RUN=1 npx hardhat run scripts/deploy.js --network hsk   (checks everything, sends nothing)
 //
@@ -7,7 +8,7 @@
 const fs = require("fs");
 const path = require("path");
 const { ethers, network } = require("hardhat");
-const HSK = require("./hsk");
+const MAINNET = require("./hsk");
 
 const POOL_ABI = [
   "function token0() view returns (address)",
@@ -23,7 +24,8 @@ async function main() {
   const dry = !!process.env.DRY_RUN;
   const [deployer] = await ethers.getSigners();
   const { chainId } = await ethers.provider.getNetwork();
-  if (Number(chainId) !== HSK.chainId && !dry) throw new Error(`Wrong chain ${chainId}, expected ${HSK.chainId}`);
+  const HSK = Number(chainId) === 133 ? MAINNET.testnet : MAINNET;
+  if (Number(chainId) !== HSK.chainId) throw new Error(`Unknown chain ${chainId}`);
 
   const agent = process.env.AGENT_ADDRESS;
   if (!agent || !ethers.isAddress(agent)) throw new Error("Set AGENT_ADDRESS in .env (the agent's own wallet address)");
@@ -76,7 +78,7 @@ async function main() {
   }
 
   const out = {
-    network: "hsk-mainnet",
+    network: HSK.chainId === 133 ? "hsk-testnet" : "hsk-mainnet",
     chainId: Number(chainId),
     vault: vaultAddr,
     owner: deployer.address,
@@ -89,12 +91,12 @@ async function main() {
     tokens: HSK.tokens,
     policy: HSK.policy,
   };
-  const file = path.join(__dirname, "..", "deployments", "hsk-mainnet.json");
+  const file = path.join(__dirname, "..", "deployments", HSK.chainId === 133 ? "hsk-testnet.json" : "hsk-mainnet.json");
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, JSON.stringify(out, null, 2));
   console.log(`\nSaved ${file}`);
   console.log(`Explorer: ${HSK.explorer}/address/${vaultAddr}`);
-  console.log(`\nNext: put KAVACH_VAULT=${vaultAddr} into .env and start the agent.`);
+  console.log(HSK.chainId === 133 ? "\nNext: npx hardhat run scripts/testnet-proof.js --network hskTestnet" : `\nNext: put KAVACH_VAULT=${vaultAddr} into .env and start the agent.`);
 }
 
 main().catch((e) => {

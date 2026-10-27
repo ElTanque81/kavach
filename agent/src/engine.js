@@ -184,6 +184,7 @@ export class Engine extends EventEmitter {
 
   /** The jury demo: open a position, kill the AI, crash the market - the parachute opens on-chain. */
   async crashTest(sym = "WHSK") {
+    if (this.crashed) return this.log("Executor", "Crash test already running - restart the AI first to run it again.", null, "warn");
     // open a demo position in the first market the contract accepts right now (TWAP settled)
     let target = this.state.positions[0]?.sym || null;
     for (let i = 0; !target && i < 15; i++) {

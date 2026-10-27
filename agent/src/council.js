@@ -6,9 +6,9 @@ import { DISPLAY } from "./config.js";
 import { llmJson, llmEnabled } from "./llm.js";
 
 export const PRESETS = {
-  conservative: { positionPct: 5, stopMult: 2.0, tpRatio: 2.0, spreadEntry: 0.9, entryScore: 1.1, maxOpen: 2 },
-  balanced: { positionPct: 10, stopMult: 2.5, tpRatio: 2.0, spreadEntry: 0.6, entryScore: 0.9, maxOpen: 3 },
-  aggressive: { positionPct: 18, stopMult: 3.0, tpRatio: 2.5, spreadEntry: 0.45, entryScore: 0.7, maxOpen: 5 },
+  conservative: { positionPct: 5, stopMult: 2.0, tpRatio: 2.0, spreadEntry: 0.7, entryScore: 0.8, maxOpen: 2 },
+  balanced: { positionPct: 10, stopMult: 2.5, tpRatio: 2.0, spreadEntry: 0.55, entryScore: 0.65, maxOpen: 3 },
+  aggressive: { positionPct: 18, stopMult: 3.0, tpRatio: 2.5, spreadEntry: 0.4, entryScore: 0.5, maxOpen: 5 },
 };
 
 export function defaultSettings() {
@@ -72,7 +72,7 @@ export class Council {
     const say = (role, text, sym = null, tone = "info") => feed.push({ role, text, sym, tone });
 
     // ---------------- Scout
-    const best = Object.values(sig).sort((a, b) => b.score - a.score)[0];
+    const best = Object.values(sig).filter((s) => settings.markets[s.sym]).sort((a, b) => b.score - a.score)[0];
     const spreads = Object.values(sig)
       .filter((s) => s.hasCex)
       .map((s) => `${DISPLAY[s.sym]} ${s.edgePct >= 0 ? "-" : "+"}${fmt(Math.abs(s.edgePct), 2)}%`)
@@ -121,7 +121,8 @@ export class Council {
     const c = candidates[0];
     const threshold = settings.entryScore + (c && !c.hasCex ? 0.3 : 0);
     if (!c || c.score < threshold) {
-      say("Quant", best ? `Best setup ${DISPLAY[best.sym]} score ${fmt(best.score)} < ${fmt(threshold)} - no edge, holding.` : "Warming up indicators.");
+      say("Quant", best ? `Best setup ${DISPLAY[best.sym]} score ${fmt(best.score)} < ${fmt(threshold)} needed (${settings.risk}) - no edge, holding.` : "Warming up indicators.");
+      this.waiting = best ? { sym: best.sym, score: best.score, threshold } : null;
       return { actions, feed, sig, hold: true };
     }
 
@@ -130,6 +131,7 @@ export class Council {
     if (c.hasCex && c.edgePct > 0.2) why.push(`spread ${fmt(c.edgePct)}% below CEX (${m.cexSource})`);
     if (c.momentum > 0.3) why.push(`momentum ${fmt(c.momentum)}`);
     if (c.rsi < 30) why.push(`RSI ${fmt(c.rsi, 0)} oversold`);
+    this.waiting = null;
     say("Quant", `${DISPLAY[c.sym]} long setup: score ${fmt(c.score)} (${why.join(", ") || "composite"}).`, c.sym, "good");
 
     // ---------------- Risk Officer: size, stop, take-profit, veto

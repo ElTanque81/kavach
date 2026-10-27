@@ -94,8 +94,8 @@ canvas{width:100%;height:150px;display:block;margin-top:14px}
 .line[data-role="Keeper"]{background:rgba(242,169,59,.08);border-radius:6px;padding:6px 8px;margin:2px -8px}
 
 /* chat */
-.chat{display:flex;flex-direction:column;height:360px}
-.msgs{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;padding-bottom:8px}
+.chat{display:flex;flex-direction:column;height:440px}
+.msgs{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:8px;padding-bottom:8px}
 .msg{max-width:88%;padding:8px 11px;border-radius:12px;font-size:14px;white-space:pre-wrap}
 .msg.you{align-self:flex-end;background:var(--sky);color:#0e1430;border-bottom-right-radius:4px}
 .msg.kavach{align-self:flex-start;background:var(--panel2);border-bottom-left-radius:4px}
@@ -329,6 +329,11 @@ function render(d) {
     ["Only your wallet withdraws", `the agent key can trade inside these rules and nothing else.`],
   ].map(([b, t]) => `<li><span>◆</span><span><b>${b}.</b> ${t[0].toUpperCase() + t.slice(1)}</span></li>`).join("");
 
+  if (!window.KAVACH_DEMO) {
+    document.querySelector('[data-a="crashtest"]').disabled = d.crashed;
+    document.querySelector('[data-a="plug"]').disabled = d.crashed;
+    document.querySelector('[data-a="revive"]').disabled = !d.crashed && !st.paused;
+  }
   $("btnRun").textContent = d.running ? "Pause agent loop" : "Start agent";
   $("btnRun").dataset.a = d.running ? "stop" : "start";
   $("ctlHint").textContent = d.mode === "sim"
@@ -359,7 +364,7 @@ function drawChart(curve) {
 }
 
 // chat
-const CHIPS = ["How am I doing?", "Be more careful", "Stop-loss 3%", "Only trade ETH and BTC", "Trade everything again", "Close everything"];
+const CHIPS = ["How am I doing?", "Why are you not trading?", "Be more careful", "Stop-loss 3%", "Only trade ETH and BTC", "Trade everything again", "Close everything"];
 $("chips").innerHTML = CHIPS.map((c) => `<button class="chip" type="button">${c}</button>`).join("");
 $("chips").addEventListener("click", (e) => { if (e.target.matches(".chip")) window.send(e.target.textContent); });
 $("chatForm").addEventListener("submit", (e) => { e.preventDefault(); const v = $("chatIn").value.trim(); if (v) window.send(v); $("chatIn").value = ""; });

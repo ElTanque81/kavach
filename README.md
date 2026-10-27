@@ -5,6 +5,8 @@
 Built for the HSK Chain Horizon Hackathon (Mumbai edition), Track 1: AI Agent Trading.
 *Kavach* (कवच) is Hindi for armour.
 
+**Demo video:** https://youtu.be/ooxRfDhLhd0
+
 ---
 
 ## The problem
@@ -23,6 +25,18 @@ Split the agent in two:
 Every position the AI opens is born with a stop-loss and a take-profit **stored in the contract**. Once the pool's TWAP crosses either, **anyone** can call `keeperClose()` and earns a 0.2% reward for it. If the agent stops sending heartbeats for an hour, anyone can unwind every position to USDT and the vault pauses itself.
 
 We show this live: the demo opens a position, **kills the AI process, crashes the market**, and a public keeper executes the stop-loss on-chain while the AI is dead.
+
+## Live on HSK Chain testnet (chain 133)
+
+| | |
+|---|---|
+| KavachVault | [`0x560295F23c699c97C35368B34FcFDFAD83780A2D`](https://testnet-explorer.hskchain.net/address/0x560295F23c699c97C35368B34FcFDFAD83780A2D) |
+| Deploy | [tx](https://testnet-explorer.hskchain.net/tx/0x83849e1ffc6f4e1b7a89876598b002c3e2d4652492f47c95879ff26b48ba56e7) |
+| Owner funds the vault | [deposit](https://testnet-explorer.hskchain.net/tx/0x12b85bd17779e3ccf940fce27341a65d86ddc606b444bc2c6a09c1ac481706b3) |
+| **Agent** opens a WHSK position on HSKSwap, stop −1.5% / take-profit +3% stored on-chain | [openPosition](https://testnet-explorer.hskchain.net/tx/0x7a981cc48ee2d761c01de61475abe1ba9dd97df88d0dbf9dab3eda5bea4591eb) |
+| Agent goes silent; 5 minutes later a **keeper** closes it via the dead-man switch, the vault pauses itself | [keeperClose → DEAD_MAN](https://testnet-explorer.hskchain.net/tx/0x55adb894239616e303689d923a0a01d832674839331c255482a189cf72b55f7e) |
+
+No agent process was involved in the last transaction.
 
 ## What makes it robust
 
@@ -59,6 +73,16 @@ npm run paper    # live HSKSwap prices and QuoterV2 fills, no transactions
 ```
 
 In the dashboard, press **Crash test** to watch the parachute open.
+
+### Deploy to HSK Chain testnet (on-chain proof)
+
+```bash
+cd contracts && npm install
+npx hardhat run scripts/deploy.js --network hskTestnet         # vault + WHSK/USDT market on testnet HSKSwap
+npx hardhat run scripts/testnet-proof.js --network hskTestnet  # ~7 min, real transactions
+```
+
+The proof script funds the vault through HSKSwap, lets the **agent** open a position with an on-chain stop and take-profit, then the agent goes silent. After the 5-minute dead-man timeout a **keeper** closes the position with `keeperClose()` and the vault pauses itself. Every step prints an explorer link and is saved to `contracts/deployments/hsk-testnet-proof.json`.
 
 ### Deploy to HSK Chain mainnet
 

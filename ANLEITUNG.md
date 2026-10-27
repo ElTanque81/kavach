@@ -30,7 +30,21 @@ Private Keys in `.env` eintragen: `DEPLOYER_PRIVATE_KEY`, `AGENT_ADDRESS`, `AGEN
 
 Das Deployment kostet nur Bruchteile eines Cents. Du brauchst ein paar HSK auf der **HSK Chain (Chain-ID 177)** in der Owner-Wallet und etwas in der Agent-Wallet. Wege: HSK an einer Börse kaufen und, falls angeboten, über das Netzwerk „HashKey Chain“ auszahlen, oder über die offizielle HashKey-Chain-Bridge. Bei Problemen im Hackathon-Telegram fragen: https://t.me/+M5yaRB-u4PRiNWM1
 
-## 4. Auf dem Mainnet deployen (Pflicht für Preisgeld!)
+## 4a. Auf dem Testnet deployen (reicht laut Organisatoren für die Abgabe)
+
+1. Test-HSK holen: https://hskchain.net/faucet – für die **Owner**-Adresse und die **Agent**-Adresse.
+2. Deployen:
+   ```bash
+   cd ~/Downloads/kavach/contracts
+   npx hardhat run scripts/deploy.js --network hskTestnet
+   ```
+3. On-Chain-Beweis (dauert ca. 7 Minuten, einfach laufen lassen):
+   ```bash
+   npx hardhat run scripts/testnet-proof.js --network hskTestnet
+   ```
+   Der Agent eröffnet eine Position, verstummt, und nach 5 Minuten schließt ein Keeper sie per Totmannschalter. Alle Explorer-Links stehen in der Ausgabe und in `contracts/deployments/hsk-testnet-proof.json`.
+
+## 4b. Auf dem Mainnet deployen (erst nötig, wenn ihr gewinnt)
 
 ```bash
 cd ../contracts

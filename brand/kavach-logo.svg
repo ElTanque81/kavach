@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="96" fill="#141a33"/>
+  <!-- shield -->
+  <path d="M256 70 L404 122 V246 C404 344 338 412 256 444 C174 412 108 344 108 246 V122 Z"
+        fill="#1f2750" stroke="#f2a93b" stroke-width="22" stroke-linejoin="round"/>
+  <!-- the on-chain stop: a floor the price cannot fall through -->
+  <line x1="150" y1="300" x2="362" y2="300" stroke="#f2a93b" stroke-width="14" stroke-linecap="round" stroke-dasharray="2 26"/>
+  <!-- price: falls, hits the stop, protected -->
+  <polyline points="150,196 196,236 232,214 276,292 300,292 362,186"
+            fill="none" stroke="#e8eaf6" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="288" cy="292" r="15" fill="#3cc8a6" stroke="#141a33" stroke-width="6"/>
+</svg>

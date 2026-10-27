@@ -28,7 +28,8 @@ module.exports = {
   },
   networks: {
     hsk: { url: process.env.HSK_RPC_URL || "https://mainnet.hsk.xyz", chainId: 177, accounts },
-    hskTestnet: { url: "https://testnet.hsk.xyz", chainId: 133, accounts },
+    // testnet RPC: legacy transactions only, and gas estimates run low -> fixed gas price and limit
+    hskTestnet: { url: process.env.HSK_TESTNET_RPC_URL || "https://testnet.hsk.xyz", chainId: 133, accounts, gasPrice: 2_000_000_000, gas: 8_000_000 },
   },
   mocha: { timeout: 120000 },
 };

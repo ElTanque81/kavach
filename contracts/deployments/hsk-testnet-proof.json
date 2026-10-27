@@ -1,0 +1,31 @@
+{
+  "network": "hsk-testnet",
+  "vault": "0x560295F23c699c97C35368B34FcFDFAD83780A2D",
+  "explorer": "https://testnet-explorer.hskchain.net",
+  "steps": [
+    {
+      "name": "deposit 2.70 test USDT into the vault",
+      "tx": "0x12b85bd17779e3ccf940fce27341a65d86ddc606b444bc2c6a09c1ac481706b3",
+      "link": "https://testnet-explorer.hskchain.net/tx/0x12b85bd17779e3ccf940fce27341a65d86ddc606b444bc2c6a09c1ac481706b3"
+    },
+    {
+      "name": "agent buys WHSK for 0.41 USDT -> position #0",
+      "tx": "0x7a981cc48ee2d761c01de61475abe1ba9dd97df88d0dbf9dab3eda5bea4591eb",
+      "link": "https://testnet-explorer.hskchain.net/tx/0x7a981cc48ee2d761c01de61475abe1ba9dd97df88d0dbf9dab3eda5bea4591eb",
+      "gasUsed": "306427"
+    },
+    {
+      "name": "keeper closes position #0: DEAD_MAN",
+      "tx": "0x55adb894239616e303689d923a0a01d832674839331c255482a189cf72b55f7e",
+      "link": "https://testnet-explorer.hskchain.net/tx/0x55adb894239616e303689d923a0a01d832674839331c255482a189cf72b55f7e",
+      "reason": "DEAD_MAN",
+      "keeperReward": "0.00080558932073389"
+    }
+  ],
+  "position": {
+    "id": 0,
+    "entry": 39927,
+    "stop": 39777,
+    "takeProfit": 40227
+  }
+}

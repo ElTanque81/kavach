@@ -7,7 +7,7 @@ import { llmJson, llmEnabled } from "./llm.js";
 import { fmt, fmtUsd, fmtPrice } from "./math.js";
 
 const SYM = { hsk: "WHSK", whsk: "WHSK", eth: "WETH", weth: "WETH", ether: "WETH", ethereum: "WETH", btc: "WBTC", wbtc: "WBTC", bitcoin: "WBTC" };
-const isGerman = (t) => /\b(wie|ist|und|nur|mehr|weniger|alles|risiko|zeig|bitte|kein|keine|ohne|wieder|sei|mach|gewinn|verlust|stopp|halt|handel|auch)\b|vorsicht|schlie|läuft|größe|aggressiver/i.test(t);
+const isGerman = (t) => /\b(wie|ist|und|nur|mehr|weniger|alles|risiko|zeig|bitte|kein|keine|ohne|wieder|sei|mach|gewinn|verlust|stopp|halt|handel|auch|warum|wieso|machst|nichts|nix|tust|du)\b|vorsicht|schlie|läuft|größe|aggressiver/i.test(t);
 
 export async function handleChat(text, ctx) {
   const de = isGerman(text);
@@ -156,9 +156,27 @@ async function rules(text, ctx, de) {
     else if (/\b(auch|also|wieder|enable|add)\b/.test(t)) patch.markets = Object.fromEntries(mentioned.map((s) => [s, true]));
   }
 
+  if (/(alle märkte|alles handeln|trade everything|all markets)/.test(t)) patch.markets = { WHSK: true, WETH: true, WBTC: true };
+
   if (Object.keys(patch).length) {
     const r = apply(patch, ctx, de);
     return { reply: [T(`Übernommen: ${r.changed.join(", ")}.`, `Updated: ${r.changed.join(", ")}.`), ...r.warnings].join(" "), changed: r.changed };
+  }
+
+  // ---- "why are you not trading?"
+  if (/(warum|wieso|why).*(nicht|nichts|kein|not|nothing|no trade)|(macht|tust|tut) (nichts|nix)|doing nothing|not trading/.test(t)) {
+    const w = ctx.engine.council.waiting;
+    const on = Object.entries(settings.markets).filter(([, v]) => v).map(([k]) => DISPLAY[k]).join(", ");
+    if (settings.agentPaused) return { reply: T("Ich bin pausiert. Schreib „weiter“, dann suche ich wieder nach Setups.", "I'm paused. Say \"resume\" and I'll look for setups again."), changed: [] };
+    if (w) {
+      return {
+        reply: T(
+          `Ich warte auf ein Signal. Bestes Setup gerade: ${DISPLAY[w.sym]} mit Score ${fmt(w.score)}, im Profil „${settings.risk}“ brauche ich ${fmt(w.threshold)}. Aktive Märkte: ${on}. Wenn du mehr Trades willst: „aggressiver“ oder „alle Märkte wieder“.`,
+          `I'm waiting for an edge. Best setup right now: ${DISPLAY[w.sym]} at score ${fmt(w.score)}; the "${settings.risk}" profile needs ${fmt(w.threshold)}. Active markets: ${on}. For more trades say "more aggressive" or "trade everything again".`
+        ),
+        changed: [],
+      };
+    }
   }
 
   // ---- "what just happened?" -> explain the latest notable events

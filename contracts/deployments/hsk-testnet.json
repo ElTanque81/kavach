@@ -1,0 +1,39 @@
+{
+  "network": "hsk-testnet",
+  "chainId": 133,
+  "vault": "0x560295F23c699c97C35368B34FcFDFAD83780A2D",
+  "owner": "0x3Ac9cEcea3088a62B60c31eFe57F87bca6CBeEE1",
+  "agent": "0xAfB599D8705da0E1609Cf3aa1CDf55e8776A8D96",
+  "deployTx": "0x83849e1ffc6f4e1b7a89876598b002c3e2d4652492f47c95879ff26b48ba56e7",
+  "deployedAt": "2026-10-27T21:26:01.709Z",
+  "router": "0xa6914E66690c6794244B5f66a09eAEbf66254237",
+  "quoter": "0x73820d9eE5Bf1BfcD429580320FC7A374E8fa1cC",
+  "pools": {
+    "WHSK": "0xc076fb478b77633736738579c7f48d2539604a50"
+  },
+  "tokens": {
+    "USDT": {
+      "address": "0x98B6173A8B7DFc52ce8bc88f1184a918A1CCaa4F",
+      "decimals": 18
+    },
+    "WHSK": {
+      "address": "0xCA8aAceEC5Db1e91B9Ed3a344bA026c4a2B3ebF6",
+      "decimals": 18
+    }
+  },
+  "policy": {
+    "maxPositionBps": 2000,
+    "maxExposureBps": 6000,
+    "maxDailyLossBps": 500,
+    "maxSlippageBps": 100,
+    "maxStopSlippageBps": 300,
+    "minStopTicks": 100,
+    "maxStopTicks": 800,
+    "maxTakeProfitTicks": 2500,
+    "maxTwapDeviationTicks": 200,
+    "keeperRewardBps": 20,
+    "twapWindow": 60,
+    "cooldown": 60,
+    "heartbeatTimeout": 300
+  }
+}
