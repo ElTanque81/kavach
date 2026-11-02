@@ -39,7 +39,8 @@ header{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;p
 .lang button[aria-pressed="true"]{background:var(--panel2);color:var(--saffron)}
 .guard{display:flex;gap:18px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 18px}
 .pulse{width:14px;height:14px;border-radius:50%;background:var(--gain);box-shadow:0 0 0 0 rgba(60,200,166,.6);animation:beat 1.6s infinite}
-.guard.dead .pulse{background:var(--loss);animation:none}
+.guard.dead .pulse,.guard.lost .pulse{background:var(--loss);animation:none}
+body.offline main{opacity:.45;filter:grayscale(.6)}
 .guard.paused .pulse,.guard.idle .pulse{background:var(--saffron);animation:none}
 @keyframes beat{0%{box-shadow:0 0 0 0 rgba(60,200,166,.55)}70%{box-shadow:0 0 0 12px rgba(60,200,166,0)}100%{box-shadow:0 0 0 0 rgba(60,200,166,0)}}
 @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
@@ -280,7 +281,8 @@ const I18N = {
     ],
     greeting: "Hi, I'm KAVACH. Ask me how the book is doing, or change how I trade: “more careful”, “stop-loss 3%”, “only ETH”, “pause”.",
     chips: ["How am I doing?", "Why are you not trading?", "Be more careful", "Stop-loss 3%", "Trade only HSK", "Buy HSK now", "Trade everything again", "Close everything"],
-    unreachable: "The agent is not reachable. Is it still running?",
+    unreachable: "The agent is not reachable. Is it still running in the terminal? Restart it with: npm run sim",
+    conn_lost: "Connection lost", conn_lost_sub: "Start the agent again: npm run sim",
     replay_note: "Recorded replay of a simulated session, ending with the crash test. Run <b>npm run sim</b> for the live agent.",
     replay_again: "Replay from start",
     replay_chat: "This page is a recording. Start the agent locally (npm run sim) to talk to it live.",
@@ -321,7 +323,8 @@ const I18N = {
     ],
     greeting: "Hallo, ich bin KAVACH. Frag mich, wie es läuft, oder ändere, wie ich handle: „vorsichtiger“, „Stop-Loss 3%“, „nur ETH“, „pausieren“.",
     chips: ["Wie läuft es?", "Warum handelst du nicht?", "Sei vorsichtiger", "Stop-Loss 3%", "Nur HSK handeln", "Kauf jetzt HSK", "Alle Märkte wieder", "Alles schließen"],
-    unreachable: "Der Agent ist nicht erreichbar. Läuft er noch?",
+    unreachable: "Der Agent ist nicht erreichbar. Läuft er noch im Terminal? Neu starten mit: npm run sim",
+    conn_lost: "Verbindung verloren", conn_lost_sub: "Agent im Terminal neu starten: npm run sim",
     replay_note: "Aufzeichnung einer simulierten Sitzung, am Ende der Crashtest. Für den Live-Agenten <b>npm run sim</b> starten.",
     replay_again: "Von vorn abspielen",
     replay_chat: "Diese Seite ist eine Aufzeichnung. Starte den Agenten lokal (npm run sim), um live mit ihm zu sprechen.",
@@ -362,7 +365,8 @@ const I18N = {
     ],
     greeting: "नमस्ते, मैं KAVACH हूँ। पूछिए कि ट्रेडिंग कैसी चल रही है, या मेरा तरीका बदलिए: „सावधान रहो“, „स्टॉप लॉस 3%“, „सिर्फ़ ETH“, „रोको“।",
     chips: ["कैसा चल रहा है?", "तुम ट्रेड क्यों नहीं कर रहे?", "सावधान रहो", "स्टॉप लॉस 3%", "सिर्फ़ HSK ट्रेड करो", "अभी HSK ख़रीदो", "सभी बाज़ार फिर से", "सब पोजीशन बंद करो"],
-    unreachable: "एजेंट से संपर्क नहीं हो पा रहा। क्या वह चल रहा है?",
+    unreachable: "एजेंट से संपर्क नहीं हो पा रहा। क्या वह टर्मिनल में चल रहा है? फिर से शुरू करें: npm run sim",
+    conn_lost: "कनेक्शन टूट गया", conn_lost_sub: "टर्मिनल में एजेंट फिर से शुरू करें: npm run sim",
     replay_note: "सिम्युलेटेड सत्र की रिकॉर्डिंग, अंत में क्रैश टेस्ट। लाइव एजेंट के लिए <b>npm run sim</b> चलाएँ।",
     replay_again: "शुरू से चलाएँ",
     replay_chat: "यह पेज एक रिकॉर्डिंग है। लाइव बात करने के लिए एजेंट को लोकल चलाएँ (npm run sim)।",
@@ -403,7 +407,8 @@ const I18N = {
     ],
     greeting: "你好，我是 KAVACH。可以问我交易情况，也可以调整我的交易方式：「保守一点」「止损3%」「只交易ETH」「暂停」。",
     chips: ["现在怎么样？", "为什么不交易？", "保守一点", "止损3%", "只交易HSK", "现在买入HSK", "交易所有市场", "全部平仓"],
-    unreachable: "无法连接代理，它还在运行吗？",
+    unreachable: "无法连接代理，它还在终端中运行吗？请重新启动：npm run sim",
+    conn_lost: "连接已断开", conn_lost_sub: "请在终端重新启动代理：npm run sim",
     replay_note: "模拟会话录像，结尾为崩盘测试。运行 <b>npm run sim</b> 体验实时代理。",
     replay_again: "从头播放",
     replay_chat: "此页面为录像。请在本地启动代理（npm run sim）进行实时对话。",
@@ -446,6 +451,7 @@ const mmss = (s) => { if (!Number.isFinite(s)) return "–"; if (s <= 0) return 
 function render(d) {
   S = d;
   const st = d.state; if (!st) return;
+  if (!online) return;
   const pol = d.policy;
 
   // badges
@@ -583,10 +589,22 @@ document.querySelector(".controls").addEventListener("click", async (e) => {
 });
 
 // live updates, or a recorded replay when demo frames are bundled (static demo page)
+let online = true;
+function setOnline(ok) {
+  if (ok === online) return;
+  online = ok;
+  document.body.classList.toggle("offline", !ok);
+  if (!ok) {
+    $("guard").className = "guard lost";
+    $("aiState").textContent = t("conn_lost");
+    $("aiSub").textContent = t("conn_lost_sub");
+    $("countdown").textContent = "–";
+  } else if (S) render(S);
+}
 function connect() {
   const es = new EventSource("/api/stream");
-  es.addEventListener("state", (e) => render(JSON.parse(e.data)));
-  es.onerror = () => { es.close(); setTimeout(connect, 2000); };
+  es.addEventListener("state", (e) => { setOnline(true); render(JSON.parse(e.data)); });
+  es.onerror = () => { es.close(); setOnline(false); setTimeout(connect, 2000); };
 }
 if (window.KAVACH_DEMO) replay(window.KAVACH_DEMO);
 else { fetch("/api/state").then((r) => r.json()).then(render).catch(() => {}); connect(); }
