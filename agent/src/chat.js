@@ -28,6 +28,34 @@ export function detectLang(t) {
 /** pick the text for a language, falling back to English */
 const L = (lang, texts) => texts[lang] ?? texts.en;
 
+/** contract / pre-check refusals in plain words */
+function explainRefusal(err, lang) {
+  const key = Object.keys(REFUSALS).find((k) => err.startsWith(k));
+  return key ? L(lang, REFUSALS[key]) : err;
+}
+const REFUSALS = {
+  Cooldown: { en: "the contract allows only one new position per minute, try again shortly", de: "der Contract erlaubt nur eine neue Position pro Minute, gleich nochmal versuchen", hi: "कॉन्ट्रैक्ट एक मिनट में सिर्फ़ एक नई पोजीशन की अनुमति देता है, थोड़ी देर में फिर कोशिश करें", zh: "合约每分钟只允许开一个新仓位，请稍后再试" },
+  TwapDeviation: { en: "the price is moving too fast right now (spot is far from the TWAP), so the contract blocks new trades for safety", de: "der Kurs bewegt sich gerade zu schnell (Spot weit weg vom TWAP), deshalb blockiert der Contract neue Trades", hi: "अभी कीमत बहुत तेज़ी से बदल रही है (स्पॉट TWAP से दूर है), इसलिए कॉन्ट्रैक्ट सुरक्षा के लिए नए ट्रेड रोक रहा है", zh: "当前价格波动过快（现价偏离 TWAP），合约出于安全暂停新交易" },
+  PositionTooLarge: { en: "the position would be larger than the on-chain size limit", de: "die Position wäre größer als das On-Chain-Limit", hi: "पोजीशन ऑन-चेन सीमा से बड़ी हो जाती", zh: "仓位超过链上规模上限" },
+  ExposureTooHigh: { en: "too much capital is already invested; the contract caps total exposure", de: "es ist schon zu viel Kapital investiert; der Contract begrenzt das Gesamtengagement", hi: "पहले से बहुत पूँजी लगी है; कॉन्ट्रैक्ट कुल एक्सपोज़र सीमित करता है", zh: "已投入资金过多，合约限制总敞口" },
+  DailyLossLimit: { en: "today's loss limit is reached, so no new positions until tomorrow", de: "das Tagesverlust-Limit ist erreicht, keine neuen Positionen bis morgen", hi: "आज की घाटा सीमा पूरी हो गई, कल तक कोई नई पोजीशन नहीं", zh: "已达当日亏损上限，明天之前不能开新仓" },
+  VaultPaused: { en: "the vault is paused", de: "der Vault ist pausiert", hi: "वॉल्ट रुका हुआ है", zh: "金库已暂停" },
+  OracleNotReady: { en: "the pool's price oracle is not ready yet", de: "das Preis-Oracle des Pools ist noch nicht bereit", hi: "पूल का प्राइस ओरेकल अभी तैयार नहीं है", zh: "资金池的价格预言机尚未就绪" },
+};
+
+/** "stop=1.5" -> "stop-loss 1.5%" in the user's language */
+function describe(change, lang) {
+  const [k, raw] = change.split("=");
+  const v = (raw ?? "").replace(/\//g, ", ");
+  const D = {
+    en: { risk: `risk profile ${v}`, stop: v === "auto" ? "stop-loss automatic" : `stop-loss ${v}%`, tp: v === "auto" ? "take-profit automatic" : `take-profit ${v}%`, positionPct: `position size ${v}% of equity`, markets: `markets ${v}`, trailing: v === "true" ? "trailing stop on" : "trailing stop off", spreadEntry: `entry spread ${v}%`, paused: v === "true" ? "paused" : "running" },
+    de: { risk: `Risikoprofil ${v}`, stop: v === "auto" ? "Stop-Loss automatisch" : `Stop-Loss ${v}%`, tp: v === "auto" ? "Take-Profit automatisch" : `Take-Profit ${v}%`, positionPct: `Positionsgröße ${v}% des Kapitals`, markets: `Märkte ${v}`, trailing: v === "true" ? "Trailing-Stop an" : "Trailing-Stop aus", spreadEntry: `Einstiegs-Spread ${v}%`, paused: v === "true" ? "pausiert" : "läuft" },
+    hi: { risk: `जोखिम प्रोफ़ाइल ${v}`, stop: v === "auto" ? "स्टॉप-लॉस स्वचालित" : `स्टॉप-लॉस ${v}%`, tp: v === "auto" ? "टेक-प्रॉफ़िट स्वचालित" : `टेक-प्रॉफ़िट ${v}%`, positionPct: `पोजीशन साइज़ पूँजी का ${v}%`, markets: `बाज़ार ${v}`, trailing: v === "true" ? "ट्रेलिंग स्टॉप चालू" : "ट्रेलिंग स्टॉप बंद", spreadEntry: `एंट्री स्प्रेड ${v}%`, paused: v === "true" ? "रुका हुआ" : "चालू" },
+    zh: { risk: `风险模式 ${v}`, stop: v === "auto" ? "止损 自动" : `止损 ${v}%`, tp: v === "auto" ? "止盈 自动" : `止盈 ${v}%`, positionPct: `仓位 资产的 ${v}%`, markets: `市场 ${v}`, trailing: v === "true" ? "追踪止损 开" : "追踪止损 关", spreadEntry: `入场价差 ${v}%`, paused: v === "true" ? "已暂停" : "运行中" },
+  };
+  return (D[lang] ?? D.en)[k] ?? change;
+}
+
 /** Hindi, Chinese or German text answers in that language; otherwise the language chosen in the dashboard. */
 export function replyLang(text, uiLang) {
   const d = detectLang(text);
@@ -224,6 +252,8 @@ async function rules(text, ctx, lang) {
       ...SYM_INTL.filter(([re]) => re.test(t)).map(([, s]) => s),
     ]),
   ];
+  // "trade HSK", "handel nur ETH", "kauf BTC", "HSK ट्रेड करो", "交易比特币" also mean: focus on these markets
+  const tradeVerb = /\b(trade|trading|handel\w*|kauf\w*|buy)\b/.test(t) || /ट्रेड|ख़रीद|खरीद/.test(t) || /交易|买/.test(t);
   if (mentioned.length) {
     if (/\b(nur|only|just|ausschließlich)\b/.test(t) || /सिर्फ़|सिर्फ|केवल/.test(t) || /只|仅/.test(t)) {
       patch.markets = { WHSK: false, WETH: false, WBTC: false, ...Object.fromEntries(mentioned.map((s) => [s, true])) };
@@ -231,17 +261,59 @@ async function rules(text, ctx, lang) {
       patch.markets = Object.fromEntries(mentioned.map((s) => [s, false]));
     } else if (/\b(auch|also|wieder|enable|add)\b/.test(t) || /भी|फिर से/.test(t) || /也|加上|恢复/.test(t)) {
       patch.markets = Object.fromEntries(mentioned.map((s) => [s, true]));
+    } else if (tradeVerb) {
+      patch.markets = { WHSK: false, WETH: false, WBTC: false, ...Object.fromEntries(mentioned.map((s) => [s, true])) };
     }
   }
+  // "buy HSK now", "kauf jetzt ETH", "अभी BTC ख़रीदो", "现在买入比特币": open a position right away
+  const buyNow =
+    mentioned.length > 0 &&
+    ((/\b(buy|kauf\w*)\b/.test(t) && /\b(now|jetzt|sofort|right away)\b/.test(t)) || /अभी.*(ख़रीद|खरीद)|(ख़रीद|खरीद).*अभी/.test(t) || /(现在|立即|马上).*买|买.*(现在|立即|马上)/.test(t));
 
   if (/(alle märkte|alles handeln|trade everything|all markets)/.test(t) || /सभी बाज़ार|सभी बाजार|सब मार्केट|सभी मार्केट/.test(t) || /所有市场|全部市场|全部交易/.test(t)) {
     patch.markets = { WHSK: true, WETH: true, WBTC: true };
   }
 
-  if (Object.keys(patch).length) {
+  if (Object.keys(patch).length || buyNow) {
     const r = apply(patch, ctx, lang);
-    const list = r.changed.join(", ");
-    return { reply: [T({ de: `Übernommen: ${list}.`, en: `Updated: ${list}.`, hi: `अपडेट किया: ${list}।`, zh: `已更新：${list}。` }), ...r.warnings].join(" "), changed: r.changed };
+    const parts = [];
+    if (r.changed.length) {
+      parts.push(T({ de: "Erledigt. Neu: ", en: "Done. New settings: ", hi: "हो गया। नई सेटिंग्स: ", zh: "已更新：" }) + r.changed.map((c) => describe(c, lang)).join(" · ") + T({ de: ".", en: ".", hi: "।", zh: "。" }));
+    }
+    parts.push(...r.warnings);
+    if ((patch.stopPct !== undefined || patch.tpPct !== undefined) && state.positions.length) {
+      parts.push(T({
+        de: "Gilt für neue Positionen; offene behalten ihren On-Chain-Stop (der kann nur angehoben werden).",
+        en: "This applies to new positions; open ones keep their on-chain stop (it can only be raised).",
+        hi: "यह नई पोजीशन पर लागू होगा; खुली पोजीशन का ऑन-चेन स्टॉप वैसा ही रहेगा (उसे सिर्फ़ ऊपर किया जा सकता है)।",
+        zh: "新设置适用于新仓位；已有仓位保留链上止损（只能上调）。",
+      }));
+    }
+    if (buyNow) {
+      const sym = mentioned[0];
+      const tr = await ctx.engine.forceOpen(sym, `user order via chat: "${text.slice(0, 60)}"`);
+      const name = DISPLAY[sym];
+      if (tr?.ok) {
+        const sl = (tr.stopTicks / 100).toFixed(2);
+        const tp = (tr.tpTicks / 100).toFixed(2);
+        const size = fmt(tr.size, 0);
+        parts.push(T({
+          de: `Gekauft: ${name} für ${size} USDT · Stop −${sl}% · Take-Profit +${tp}% (on-chain).`,
+          en: `Bought ${name} for ${size} USDT · stop −${sl}% · take-profit +${tp}% (on-chain).`,
+          hi: `${name} ख़रीदा: ${size} USDT · स्टॉप −${sl}% · टेक-प्रॉफ़िट +${tp}% (ऑन-चेन)।`,
+          zh: `已买入 ${name}：${size} USDT · 止损 −${sl}% · 止盈 +${tp}%（链上）。`,
+        }));
+      } else {
+        const why = explainRefusal(tr?.error || "?", lang);
+        parts.push(T({
+          de: `Kauf von ${name} abgelehnt: ${why}. Das prüft der Contract, nicht ich.`,
+          en: `Buying ${name} was refused: ${why}. That check is the contract's, not mine.`,
+          hi: `${name} की ख़रीद अस्वीकृत: ${why}। यह जाँच कॉन्ट्रैक्ट करता है, मैं नहीं।`,
+          zh: `买入 ${name} 被拒绝：${why}。这是合约的检查，不是我的。`,
+        }));
+      }
+    }
+    return { reply: parts.join(" "), changed: [...r.changed, ...(buyNow ? ["buy"] : [])] };
   }
 
   // ---- "why are you not trading?"

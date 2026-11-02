@@ -175,12 +175,19 @@ export class Engine extends EventEmitter {
   }
 
   /** Demo helper: open a position right now - still subject to every on-chain risk check. */
-  async forceOpen(sym = "WHSK") {
+  /** Open a position right now (user order or demo). Uses the chat's stop / take-profit if set; the contract still checks everything. */
+  async forceOpen(sym = "WHSK", reason = "demo position (crash test)") {
     const st = await this.vault.state(this.snap);
-    const size = Math.floor((st.equity * Math.min(this.settings.positionPct, this.policy.maxPositionBps / 100 - 1)) / 100);
-    await this.execute({ type: "open", sym, size, stopTicks: Math.max(this.policy.minStopTicks, 300), tpTicks: 600, reason: "demo position (crash test)" });
+    const p = this.policy;
+    const s = this.settings;
+    const size = Math.floor((st.equity * Math.min(s.positionPct, p.maxPositionBps / 100 - 1)) / 100);
+    const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, Math.round(x)));
+    const stopTicks = clamp(s.stopPctOverride ? s.stopPctOverride * 100 : 300, p.minStopTicks, p.maxStopTicks);
+    const tpTicks = clamp(s.tpPctOverride ? s.tpPctOverride * 100 : stopTicks * s.tpRatio, 1, p.maxTakeProfitTicks);
+    await this.execute({ type: "open", sym, size, stopTicks, tpTicks, reason });
     this.state = await this.vault.state(this.snap);
     this.emit("state");
+    return this.trades[0];
   }
 
   /** The jury demo: open a position, kill the AI, crash the market - the parachute opens on-chain. */
