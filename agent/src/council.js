@@ -121,8 +121,11 @@ export class Council {
     const c = candidates[0];
     const threshold = settings.entryScore + (c && !c.hasCex ? 0.3 : 0);
     if (!c || c.score < threshold) {
-      say("Quant", best ? `Best setup ${DISPLAY[best.sym]} score ${fmt(best.score)} < ${fmt(threshold)} needed (${settings.risk}) - no edge, holding.` : "Warming up indicators.");
-      this.waiting = best ? { sym: best.sym, score: best.score, threshold } : null;
+      const warming = Object.values(sig).some((s) => settings.markets[s.sym] && s.samples < 20);
+      if (c) say("Quant", `Best setup ${DISPLAY[c.sym]} score ${fmt(c.score)} < ${fmt(threshold)} needed (${settings.risk}) - no edge, holding.`);
+      else if (warming) say("Quant", `Warming up indicators (${Math.min(...Object.values(sig).map((s) => s.samples))}/20 samples).`);
+      else say("Quant", "Every active market already has an open position - managing those.");
+      this.waiting = c ? { sym: c.sym, score: c.score, threshold } : null;
       return { actions, feed, sig, hold: true };
     }
 

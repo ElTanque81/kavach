@@ -45,7 +45,7 @@ export function startServer(engine, port) {
       }
 
       if (url.pathname === "/api/chat" && req.method === "POST") {
-        const { text } = await body();
+        const { text, lang } = await body();
         if (!text || typeof text !== "string") return json(400, { error: "text required" });
         chatLog.push({ who: "you", text, t: Date.now() });
         const r = await handleChat(text.slice(0, 500), {
@@ -54,7 +54,7 @@ export function startServer(engine, port) {
           state: engine.state,
           snap: engine.snap,
           engine,
-        });
+        }, lang);
         chatLog.push({ who: "kavach", text: r.reply, t: Date.now() });
         if (r.changed?.length) engine.log("You", `chat → ${r.changed.join(", ")}`, null, "info");
         broadcast("state", engine.publicState());

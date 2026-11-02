@@ -28,8 +28,15 @@ export function detectLang(t) {
 /** pick the text for a language, falling back to English */
 const L = (lang, texts) => texts[lang] ?? texts.en;
 
-export async function handleChat(text, ctx) {
-  const lang = detectLang(text);
+/** Hindi, Chinese or German text answers in that language; otherwise the language chosen in the dashboard. */
+export function replyLang(text, uiLang) {
+  const d = detectLang(text);
+  if (d !== "en") return d;
+  return ["en", "de", "hi", "zh"].includes(uiLang) ? uiLang : "en";
+}
+
+export async function handleChat(text, ctx, uiLang) {
+  const lang = replyLang(text, uiLang);
   if (llmEnabled() && ctx.settings.useLlm) {
     const r = await llmJson(
       "You control KAVACH, an AI spot-trading agent on HSKSwap (HSK Chain). Markets: WHSK (HSK), WETH (ETH), WBTC (BTC) vs USDT. " +

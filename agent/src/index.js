@@ -11,7 +11,9 @@ try {
   process.exit(1);
 }
 startServer(engine, config.port);
-if (process.env.AUTO_START !== "false") engine.start();
+// The agent waits for "Start agent" in the dashboard (or AUTO_START=true for unattended runs).
+if (process.env.AUTO_START === "true") engine.start();
+else console.log('  The agent is ready. Press "Start agent" in the dashboard to begin trading.\n');
 
 process.on("SIGINT", () => {
   engine.stop();

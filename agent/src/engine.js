@@ -48,6 +48,7 @@ export class Engine extends EventEmitter {
     this.council.observe(this.snap);
     this.state = await this.vault.state(this.snap);
     this.log("Executor", `KAVACH online · mode ${this.mode.toUpperCase()} · ${this.mode === "live" ? `vault ${config.vault}` : "paper vault (same rules as the contract)"} · LLM: ${llmName() || "off (deterministic)"}`);
+    if (process.env.AUTO_START !== "true") this.log("Executor", 'Ready. Press "Start agent" to begin.', null, "info");
   }
 
   log(role, text, sym = null, tone = "info") {

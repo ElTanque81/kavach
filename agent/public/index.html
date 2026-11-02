@@ -11,8 +11,8 @@
   --ink:#141a33; --panel:#1b2242; --panel2:#222a50; --line:#2e3766;
   --text:#e8eaf6; --muted:#9aa2c9; --saffron:#f2a93b; --gain:#3cc8a6; --loss:#f0645a; --sky:#7aa7ff;
   --r-lg:14px; --r-sm:8px; color-scheme:dark;
-  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
-  --body:"Manrope", "Segoe UI", system-ui, sans-serif;
+  --display:"Bricolage Grotesque", "Avenir Next", "Kohinoor Devanagari", "PingFang SC", system-ui, sans-serif;
+  --body:"Manrope", "Segoe UI", "Kohinoor Devanagari", "Noto Sans Devanagari", "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--ink);color:var(--text);font:15px/1.5 var(--body)}
@@ -32,10 +32,15 @@ header{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;p
 .badge b{color:var(--text);font-weight:600}
 .badge.live b{color:var(--saffron)}
 
+.hright{display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.lang{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:99px;padding:3px}
+.lang button{background:transparent;border:0;color:var(--muted);border-radius:99px;padding:4px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.lang button:hover{color:var(--text)}
+.lang button[aria-pressed="true"]{background:var(--panel2);color:var(--saffron)}
 .guard{display:flex;gap:18px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 18px}
 .pulse{width:14px;height:14px;border-radius:50%;background:var(--gain);box-shadow:0 0 0 0 rgba(60,200,166,.6);animation:beat 1.6s infinite}
 .guard.dead .pulse{background:var(--loss);animation:none}
-.guard.paused .pulse{background:var(--saffron);animation:none}
+.guard.paused .pulse,.guard.idle .pulse{background:var(--saffron);animation:none}
 @keyframes beat{0%{box-shadow:0 0 0 0 rgba(60,200,166,.55)}70%{box-shadow:0 0 0 12px rgba(60,200,166,0)}100%{box-shadow:0 0 0 0 rgba(60,200,166,0)}}
 @media (prefers-reduced-motion:reduce){.pulse{animation:none}}
 .guard .who{font:600 15px var(--display)}
@@ -102,9 +107,11 @@ canvas{width:100%;height:150px;display:block;margin-top:14px}
 form{display:flex;gap:8px}
 input{flex:1;background:var(--ink);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font:inherit}
 .btn{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 13px;cursor:pointer}
+form .btn{white-space:nowrap;flex-shrink:0}
 .btn:hover{border-color:var(--sky)}
 .btn.primary{background:var(--saffron);color:#1b1404;border-color:var(--saffron);font-weight:700}
 .btn.danger{border-color:var(--loss);color:#ffd6d2}
+.btn.go{border-color:var(--gain);color:var(--gain);font-weight:700}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
 .chip{font-size:12.5px;background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:4px 10px;cursor:pointer}
 .chip:hover{color:var(--text)}
@@ -130,6 +137,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media (max-width:1250px){main{grid-template-columns:1fr 1fr}.side{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:18px}}
 @media (max-width:820px){
   header{grid-template-columns:1fr;padding:16px}
+  .hright{align-items:stretch}
+  .lang{align-self:flex-start}
   main{grid-template-columns:1fr;padding:16px}
   .side{display:flex}
   .mkts,.kpis{grid-template-columns:1fr}
@@ -144,10 +153,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <svg width="40" height="46" viewBox="0 0 40 46" aria-hidden="true"><path d="M20 2 37 8v14c0 11-7.5 18.5-17 22C10.5 40.5 3 33 3 22V8z" fill="none" stroke="#f2a93b" stroke-width="3"/><path d="M12 23l6 6 11-12" fill="none" stroke="#e8eaf6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <div>
         <h1>KAVACH</h1>
-        <p>An AI trading agent whose stop-losses live on-chain, so they work even when the AI doesn't.</p>
+        <p data-i18n="tagline">An AI trading agent whose stop-losses live on-chain, so they work even when the AI doesn't.</p>
       </div>
     </div>
     <div class="badges" id="badges"></div>
+  </div>
+  <div class="hright">
+  <div class="lang" id="lang" role="group" aria-label="Language">
+    <button type="button" data-lang="en">EN</button><button type="button" data-lang="de">DE</button><button type="button" data-lang="hi">हिन्दी</button><button type="button" data-lang="zh">中文</button>
   </div>
   <div class="guard" id="guard" role="status" aria-live="polite">
     <div class="pulse" aria-hidden="true"></div>
@@ -157,8 +170,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
     </div>
     <div>
       <div class="countdown num" id="countdown">–</div>
-      <div class="sub" style="text-align:right">until dead-man switch</div>
+      <div class="sub" style="text-align:right" data-i18n="until_deadman">until dead-man switch</div>
     </div>
+  </div>
   </div>
 </header>
 
@@ -166,61 +180,61 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <div class="col">
     <section>
       <div class="kpis">
-        <div class="kpi"><div class="l">Equity (USDT)</div><div class="v num" id="equity">–</div></div>
-        <div class="kpi"><div class="l">Today</div><div class="v num" id="today">–</div></div>
-        <div class="kpi"><div class="l">Realized PnL</div><div class="v num" id="realized">–</div></div>
+        <div class="kpi"><div class="l" data-i18n="equity">Equity (USDT)</div><div class="v num" id="equity">–</div></div>
+        <div class="kpi"><div class="l" data-i18n="today">Today</div><div class="v num" id="today">–</div></div>
+        <div class="kpi"><div class="l" data-i18n="realized">Realized PnL</div><div class="v num" id="realized">–</div></div>
       </div>
       <div class="meters">
-        <div class="meter"><div class="l"><span>Exposure</span><span class="num" id="expoL">–</span></div><div class="bar" id="expoB"><i></i></div></div>
-        <div class="meter"><div class="l"><span>Daily loss budget used</span><span class="num" id="lossL">–</span></div><div class="bar" id="lossB"><i></i></div></div>
+        <div class="meter"><div class="l"><span data-i18n="exposure">Exposure</span><span class="num" id="expoL">–</span></div><div class="bar" id="expoB"><i></i></div></div>
+        <div class="meter"><div class="l"><span data-i18n="loss_budget">Daily loss budget used</span><span class="num" id="lossL">–</span></div><div class="bar" id="lossB"><i></i></div></div>
       </div>
       <canvas id="chart" aria-label="Equity curve" role="img"></canvas>
     </section>
 
     <section>
-      <h2>Markets on HSKSwap <small id="mktNote">DEX price vs. centralized exchanges</small></h2>
+      <h2><span data-i18n="mkts_title">Markets on HSKSwap</span> <small data-i18n="mkts_note">DEX price vs. centralized exchanges</small></h2>
       <div class="mkts" id="mkts"></div>
     </section>
 
     <section>
-      <h2>Open positions <small>each one carries its own on-chain stop and take-profit</small></h2>
+      <h2><span data-i18n="pos_title">Open positions</span> <small data-i18n="pos_note">each one carries its own on-chain stop and take-profit</small></h2>
       <div id="positions"></div>
     </section>
   </div>
 
   <div class="col">
     <section>
-      <h2>Council <small>why the agent does what it does</small></h2>
+      <h2><span data-i18n="council_title">Council</span> <small data-i18n="council_note">why the agent does what it does</small></h2>
       <div class="feed" id="feed"></div>
     </section>
     <section>
-      <h2>Trade log</h2>
+      <h2 data-i18n="trades_title">Trade log</h2>
       <table><tbody id="trades"></tbody></table>
     </section>
   </div>
 
   <aside class="col side">
     <section>
-      <h2>Talk to the agent</h2>
+      <h2 data-i18n="chat_title">Talk to the agent</h2>
       <div class="chat">
         <div class="chips" id="chips"></div>
         <div class="msgs" id="msgs"></div>
-        <form id="chatForm"><input id="chatIn" placeholder="Ask in English, Deutsch, हिन्दी or 中文" aria-label="Message to the agent" autocomplete="off"><button class="btn primary">Send</button></form>
+        <form id="chatForm"><input id="chatIn" placeholder="Ask the agent…" aria-label="Message to the agent" autocomplete="off"><button class="btn primary" data-i18n="send">Send</button></form>
       </div>
     </section>
     <section>
-      <h2>Controls</h2>
+      <h2 data-i18n="controls_title">Controls</h2>
       <div class="controls">
         <button class="btn" data-a="start" id="btnRun">Start agent</button>
-        <button class="btn" data-a="cycle">Run one cycle</button>
-        <button class="btn primary wide" data-a="crashtest" title="Opens a position, kills the AI process and crashes the market">Crash test: kill the AI, crash the market</button>
-        <button class="btn danger" data-a="plug">Pull the plug</button>
-        <button class="btn" data-a="revive">Restart AI</button>
+        <button class="btn" data-a="cycle" data-i18n="btn_cycle">Run one cycle</button>
+        <button class="btn primary wide" data-a="crashtest" data-i18n="btn_crash">Crash test: kill the AI, crash the market</button>
+        <button class="btn danger" data-a="plug" data-i18n="btn_plug">Pull the plug</button>
+        <button class="btn" data-a="revive" data-i18n="btn_revive">Restart AI</button>
       </div>
       <p class="hint" id="ctlHint"></p>
     </section>
     <section>
-      <h2>Enforced by the contract</h2>
+      <h2 data-i18n="rules_title">Enforced by the contract</h2>
       <ul class="rules" id="rules"></ul>
     </section>
   </aside>
@@ -228,6 +242,197 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 <script>
 const $ = (id) => document.getElementById(id);
+// ---------- languages: EN / DE / हिन्दी / 中文 (switch in the header, remembered per browser)
+const I18N = {
+  en: {
+    tagline: "An AI trading agent whose stop-losses live on-chain, so they work even when the AI doesn't.",
+    until_deadman: "until dead-man switch",
+    equity: "Equity (USDT)", today: "Today", realized: "Realized PnL", exposure: "Exposure", loss_budget: "Daily loss budget used",
+    of_max: (a, b) => `${a}% of max ${b}%`, of: (a, b) => `${a}% of ${b}%`,
+    mkts_title: "Markets on HSKSwap", mkts_note: "DEX price vs. centralized exchanges",
+    pos_title: "Open positions", pos_note: "each one carries its own on-chain stop and take-profit",
+    council_title: "Council", council_note: "why the agent does what it does",
+    trades_title: "Trade log", chat_title: "Talk to the agent", controls_title: "Controls", rules_title: "Enforced by the contract",
+    send: "Send", placeholder: "Ask the agent…",
+    btn_start: "Start agent", btn_stop: "Pause agent loop", btn_cycle: "Run one cycle", btn_crash: "Crash test: kill the AI, crash the market", btn_plug: "Pull the plug", btn_revive: "Restart AI",
+    hint_sim: "Simulated market: 1 cycle = 1 market minute, dead-man switch after 15 minutes.",
+    hint_live: "Live: trades are real transactions. Stops are executed by the public keeper bot.",
+    hint_paper: "Paper: real HSKSwap prices and quotes, no transactions.",
+    hint_replay: "Controls are disabled in the recording.",
+    ai_alive: "AI agent alive", ai_offline: "AI agent offline", vault_paused: "Vault paused", ai_paused_you: "AI agent paused by you", ai_ready: "AI agent ready",
+    sub_guarded: "Positions still guarded by on-chain stops", sub_nothing: "Nothing at risk", sub_fired: "Dead-man switch fired · owner must restart",
+    sub_heartbeat: (n) => `Heartbeat every cycle · ${n} cycles`, sub_ready: "Press “Start agent” to begin", fired: "fired",
+    mode_sim: "Simulated market", mode_paper: "Paper trading on live HSKSwap prices", mode_live: "Live on HSK Chain",
+    vault: "Vault", vault_none: "Vault not deployed yet", strategist: "Strategist", deterministic: "deterministic", profile: "Profile",
+    twap: "10-min TWAP", signal: "Signal", no_cex: "no CEX",
+    pos_empty: "No open positions. The agent opens one only when the Risk Officer and the contract both agree.",
+    stop: "stop", entry: "entry", tp: "take-profit",
+    trades_empty: "No trades yet.",
+    t_buy: (n) => `buy ${n} USDT`, t_sell: "sell", t_stop_raised: "stop raised", t_hold: "hold (heartbeat)", t_keeper: (w) => `${w} by keeper`, refused: "refused",
+    why_STOP_LOSS: "stop loss", why_TAKE_PROFIT: "take profit", why_DEAD_MAN: "dead man",
+    rules: (p) => [
+      ["Every position is born with a stop-loss", `Between ${p.minStopTicks / 100}% and ${p.maxStopTicks / 100}% below entry. The AI can raise it, never lower it.`],
+      ["Anyone can execute a triggered stop", `And earns ${p.keeperRewardBps / 100}% for it. No server of ours needs to be up.`],
+      ["Dead-man switch", `After ${Math.round(p.heartbeatTimeout / 60)} min without a heartbeat, anyone can unwind every position to USDT and the vault pauses.`],
+      ["Prices come from the pool's TWAP", "A flash dump cannot trigger a stop, and fills are floored at the TWAP."],
+      ["Size limits", `${p.maxPositionBps / 100}% per position, ${p.maxExposureBps / 100}% total, trading stops after −${p.maxDailyLossBps / 100}% in a day.`],
+      ["Only your wallet withdraws", "The agent key can trade inside these rules and nothing else."],
+    ],
+    greeting: "Hi, I'm KAVACH. Ask me how the book is doing, or change how I trade: “more careful”, “stop-loss 3%”, “only ETH”, “pause”.",
+    chips: ["How am I doing?", "Why are you not trading?", "Be more careful", "Stop-loss 3%", "Only trade ETH and BTC", "Trade everything again", "Close everything"],
+    unreachable: "The agent is not reachable. Is it still running?",
+    replay_note: "Recorded replay of a simulated session, ending with the crash test. Run <b>npm run sim</b> for the live agent.",
+    replay_again: "Replay from start",
+    replay_chat: "This page is a recording. Start the agent locally (npm run sim) to talk to it live.",
+  },
+  de: {
+    tagline: "Ein KI-Trading-Agent, dessen Stop-Losses on-chain liegen – sie greifen auch, wenn die KI ausfällt.",
+    until_deadman: "bis zum Totmannschalter",
+    equity: "Kapital (USDT)", today: "Heute", realized: "Realisiert", exposure: "Investiert", loss_budget: "Tagesverlust-Budget genutzt",
+    of_max: (a, b) => `${a}% von max. ${b}%`, of: (a, b) => `${a}% von ${b}%`,
+    mkts_title: "Märkte auf HSKSwap", mkts_note: "DEX-Preis vs. zentrale Börsen",
+    pos_title: "Offene Positionen", pos_note: "jede hat ihren eigenen Stop-Loss und Take-Profit on-chain",
+    council_title: "Agenten-Rat", council_note: "warum der Agent tut, was er tut",
+    trades_title: "Handelsprotokoll", chat_title: "Mit dem Agenten sprechen", controls_title: "Steuerung", rules_title: "Vom Contract erzwungen",
+    send: "Senden", placeholder: "Frag den Agenten …",
+    btn_start: "Agent starten", btn_stop: "Agent pausieren", btn_cycle: "Einen Zyklus ausführen", btn_crash: "Crashtest: KI abschalten, Markt crashen", btn_plug: "Stecker ziehen", btn_revive: "KI neu starten",
+    hint_sim: "Simulierter Markt: 1 Zyklus = 1 Marktminute, Totmannschalter nach 15 Minuten.",
+    hint_live: "Live: Trades sind echte Transaktionen. Stops führt der öffentliche Keeper-Bot aus.",
+    hint_paper: "Paper: echte HSKSwap-Kurse und Quotes, keine Transaktionen.",
+    hint_replay: "In der Aufzeichnung ist die Steuerung deaktiviert.",
+    ai_alive: "KI-Agent aktiv", ai_offline: "KI-Agent offline", vault_paused: "Vault pausiert", ai_paused_you: "KI-Agent von dir pausiert", ai_ready: "KI-Agent bereit",
+    sub_guarded: "Positionen bleiben durch On-Chain-Stops geschützt", sub_nothing: "Nichts im Risiko", sub_fired: "Totmannschalter ausgelöst · Owner muss neu starten",
+    sub_heartbeat: (n) => `Heartbeat jeden Zyklus · ${n} Zyklen`, sub_ready: "„Agent starten“ drücken, um zu beginnen", fired: "ausgelöst",
+    mode_sim: "Simulierter Markt", mode_paper: "Paper-Trading mit Live-Kursen von HSKSwap", mode_live: "Live auf HSK Chain",
+    vault: "Vault", vault_none: "Vault noch nicht deployt", strategist: "Stratege", deterministic: "regelbasiert", profile: "Profil",
+    twap: "10-Min-TWAP", signal: "Signal", no_cex: "kein CEX",
+    pos_empty: "Keine offenen Positionen. Der Agent eröffnet nur eine, wenn Risk Officer und Contract beide zustimmen.",
+    stop: "Stop", entry: "Einstieg", tp: "Take-Profit",
+    trades_empty: "Noch keine Trades.",
+    t_buy: (n) => `Kauf ${n} USDT`, t_sell: "Verkauf", t_stop_raised: "Stop angehoben", t_hold: "Halten (Heartbeat)", t_keeper: (w) => `${w} durch Keeper`, refused: "abgelehnt",
+    why_STOP_LOSS: "Stop-Loss", why_TAKE_PROFIT: "Take-Profit", why_DEAD_MAN: "Totmannschalter",
+    rules: (p) => [
+      ["Jede Position startet mit einem Stop-Loss", `Zwischen ${p.minStopTicks / 100}% und ${p.maxStopTicks / 100}% unter dem Einstieg. Die KI kann ihn anheben, aber nie senken.`],
+      ["Jeder kann einen ausgelösten Stop ausführen", `Und bekommt ${p.keeperRewardBps / 100}% dafür. Kein Server von uns muss laufen.`],
+      ["Totmannschalter", `Nach ${Math.round(p.heartbeatTimeout / 60)} Min. ohne Heartbeat kann jeder alle Positionen in USDT auflösen, und der Vault pausiert.`],
+      ["Kurse kommen vom TWAP des Pools", "Ein Flash-Crash kann keinen Stop auslösen, und Ausführungen sind am TWAP abgesichert."],
+      ["Größenlimits", `${p.maxPositionBps / 100}% pro Position, ${p.maxExposureBps / 100}% insgesamt, Handelsstopp nach −${p.maxDailyLossBps / 100}% an einem Tag.`],
+      ["Nur deine Wallet kann abheben", "Der Agent-Schlüssel kann nur innerhalb dieser Regeln handeln, sonst nichts."],
+    ],
+    greeting: "Hallo, ich bin KAVACH. Frag mich, wie es läuft, oder ändere, wie ich handle: „vorsichtiger“, „Stop-Loss 3%“, „nur ETH“, „pausieren“.",
+    chips: ["Wie läuft es?", "Warum handelst du nicht?", "Sei vorsichtiger", "Stop-Loss 3%", "Nur ETH und BTC handeln", "Alle Märkte wieder", "Alles schließen"],
+    unreachable: "Der Agent ist nicht erreichbar. Läuft er noch?",
+    replay_note: "Aufzeichnung einer simulierten Sitzung, am Ende der Crashtest. Für den Live-Agenten <b>npm run sim</b> starten.",
+    replay_again: "Von vorn abspielen",
+    replay_chat: "Diese Seite ist eine Aufzeichnung. Starte den Agenten lokal (npm run sim), um live mit ihm zu sprechen.",
+  },
+  hi: {
+    tagline: "एक AI ट्रेडिंग एजेंट जिसके स्टॉप-लॉस ऑन-चेन रहते हैं – AI बंद हो जाए तब भी वे काम करते हैं।",
+    until_deadman: "डेड-मैन स्विच तक",
+    equity: "पूँजी (USDT)", today: "आज", realized: "रियलाइज़्ड लाभ/हानि", exposure: "एक्सपोज़र", loss_budget: "दैनिक घाटा सीमा उपयोग",
+    of_max: (a, b) => `${a}% / अधिकतम ${b}%`, of: (a, b) => `${a}% / ${b}%`,
+    mkts_title: "HSKSwap पर बाज़ार", mkts_note: "DEX कीमत बनाम केंद्रीकृत एक्सचेंज",
+    pos_title: "खुली पोजीशन", pos_note: "हर पोजीशन का अपना ऑन-चेन स्टॉप-लॉस और टेक-प्रॉफ़िट",
+    council_title: "एजेंट परिषद", council_note: "एजेंट क्या करता है और क्यों",
+    trades_title: "ट्रेड लॉग", chat_title: "एजेंट से बात करें", controls_title: "नियंत्रण", rules_title: "कॉन्ट्रैक्ट द्वारा लागू",
+    send: "भेजें", placeholder: "एजेंट से पूछें…",
+    btn_start: "एजेंट शुरू करें", btn_stop: "एजेंट रोकें", btn_cycle: "एक चक्र चलाएँ", btn_crash: "क्रैश टेस्ट: AI बंद करें, बाज़ार गिराएँ", btn_plug: "प्लग खींचें", btn_revive: "AI फिर से शुरू करें",
+    hint_sim: "सिम्युलेटेड बाज़ार: 1 चक्र = बाज़ार का 1 मिनट, 15 मिनट बाद डेड-मैन स्विच।",
+    hint_live: "लाइव: ट्रेड असली ट्रांज़ैक्शन हैं। स्टॉप सार्वजनिक कीपर बॉट चलाता है।",
+    hint_paper: "पेपर: HSKSwap की असली कीमतें और कोट, कोई ट्रांज़ैक्शन नहीं।",
+    hint_replay: "रिकॉर्डिंग में नियंत्रण बंद हैं।",
+    ai_alive: "AI एजेंट सक्रिय", ai_offline: "AI एजेंट ऑफ़लाइन", vault_paused: "वॉल्ट रुका हुआ", ai_paused_you: "AI एजेंट आपने रोका", ai_ready: "AI एजेंट तैयार",
+    sub_guarded: "पोजीशन अब भी ऑन-चेन स्टॉप से सुरक्षित", sub_nothing: "कुछ भी जोखिम में नहीं", sub_fired: "डेड-मैन स्विच चला · ओनर को फिर शुरू करना होगा",
+    sub_heartbeat: (n) => `हर चक्र में हार्टबीट · ${n} चक्र`, sub_ready: "शुरू करने के लिए „एजेंट शुरू करें“ दबाएँ", fired: "चल गया",
+    mode_sim: "सिम्युलेटेड बाज़ार", mode_paper: "HSKSwap की लाइव कीमतों पर पेपर ट्रेडिंग", mode_live: "HSK Chain पर लाइव",
+    vault: "वॉल्ट", vault_none: "वॉल्ट अभी डिप्लॉय नहीं", strategist: "रणनीतिकार", deterministic: "नियम-आधारित", profile: "प्रोफ़ाइल",
+    twap: "10-मिनट TWAP", signal: "सिग्नल", no_cex: "CEX नहीं",
+    pos_empty: "कोई खुली पोजीशन नहीं। एजेंट तभी पोजीशन खोलता है जब रिस्क ऑफ़िसर और कॉन्ट्रैक्ट दोनों सहमत हों।",
+    stop: "स्टॉप", entry: "एंट्री", tp: "टेक-प्रॉफ़िट",
+    trades_empty: "अभी कोई ट्रेड नहीं।",
+    t_buy: (n) => `${n} USDT की ख़रीद`, t_sell: "बिक्री", t_stop_raised: "स्टॉप ऊपर किया", t_hold: "होल्ड (हार्टबीट)", t_keeper: (w) => `कीपर द्वारा ${w}`, refused: "अस्वीकृत",
+    why_STOP_LOSS: "स्टॉप-लॉस", why_TAKE_PROFIT: "टेक-प्रॉफ़िट", why_DEAD_MAN: "डेड-मैन स्विच",
+    rules: (p) => [
+      ["हर पोजीशन स्टॉप-लॉस के साथ खुलती है", `एंट्री से ${p.minStopTicks / 100}% से ${p.maxStopTicks / 100}% नीचे। AI इसे ऊपर कर सकता है, कभी नीचे नहीं।`],
+      ["कोई भी ट्रिगर हुआ स्टॉप चला सकता है", `और इसके लिए ${p.keeperRewardBps / 100}% कमाता है। हमारा कोई सर्वर चालू होना ज़रूरी नहीं।`],
+      ["डेड-मैन स्विच", `${Math.round(p.heartbeatTimeout / 60)} मिनट तक हार्टबीट न मिले तो कोई भी सारी पोजीशन USDT में बदल सकता है और वॉल्ट रुक जाता है।`],
+      ["कीमतें पूल के TWAP से आती हैं", "अचानक गिरावट स्टॉप ट्रिगर नहीं कर सकती, और हर सौदा TWAP से सुरक्षित है।"],
+      ["आकार की सीमाएँ", `प्रति पोजीशन ${p.maxPositionBps / 100}%, कुल ${p.maxExposureBps / 100}%, एक दिन में −${p.maxDailyLossBps / 100}% के बाद ट्रेडिंग बंद।`],
+      ["सिर्फ़ आपका वॉलेट पैसा निकाल सकता है", "एजेंट की कुंजी इन नियमों के भीतर सिर्फ़ ट्रेड कर सकती है, और कुछ नहीं।"],
+    ],
+    greeting: "नमस्ते, मैं KAVACH हूँ। पूछिए कि ट्रेडिंग कैसी चल रही है, या मेरा तरीका बदलिए: „सावधान रहो“, „स्टॉप लॉस 3%“, „सिर्फ़ ETH“, „रोको“।",
+    chips: ["कैसा चल रहा है?", "तुम ट्रेड क्यों नहीं कर रहे?", "सावधान रहो", "स्टॉप लॉस 3%", "सिर्फ़ ETH और BTC", "सभी बाज़ार फिर से", "सब पोजीशन बंद करो"],
+    unreachable: "एजेंट से संपर्क नहीं हो पा रहा। क्या वह चल रहा है?",
+    replay_note: "सिम्युलेटेड सत्र की रिकॉर्डिंग, अंत में क्रैश टेस्ट। लाइव एजेंट के लिए <b>npm run sim</b> चलाएँ।",
+    replay_again: "शुरू से चलाएँ",
+    replay_chat: "यह पेज एक रिकॉर्डिंग है। लाइव बात करने के लिए एजेंट को लोकल चलाएँ (npm run sim)।",
+  },
+  zh: {
+    tagline: "一个止损写在链上的 AI 交易代理——即使 AI 宕机，止损依然有效。",
+    until_deadman: "距超时保护触发",
+    equity: "资产 (USDT)", today: "今日", realized: "已实现盈亏", exposure: "持仓占比", loss_budget: "当日亏损额度已用",
+    of_max: (a, b) => `${a}%（上限 ${b}%）`, of: (a, b) => `${a}% / ${b}%`,
+    mkts_title: "HSKSwap 市场", mkts_note: "DEX 价格 vs 中心化交易所",
+    pos_title: "当前持仓", pos_note: "每个仓位都有自己的链上止损和止盈",
+    council_title: "决策委员会", council_note: "代理为什么这样操作",
+    trades_title: "交易记录", chat_title: "与代理对话", controls_title: "控制", rules_title: "由合约强制执行",
+    send: "发送", placeholder: "向代理提问……",
+    btn_start: "启动代理", btn_stop: "暂停代理", btn_cycle: "运行一个周期", btn_crash: "崩盘测试：关闭 AI，让市场暴跌", btn_plug: "拔掉电源", btn_revive: "重启 AI",
+    hint_sim: "模拟市场：1 个周期 = 1 分钟行情，15 分钟无心跳触发超时保护。",
+    hint_live: "实盘：交易为真实链上交易，止损由公共守护机器人执行。",
+    hint_paper: "模拟盘：HSKSwap 实时价格与报价，不发送交易。",
+    hint_replay: "录像中控制按钮已停用。",
+    ai_alive: "AI 代理运行中", ai_offline: "AI 代理已离线", vault_paused: "金库已暂停", ai_paused_you: "AI 代理已被你暂停", ai_ready: "AI 代理已就绪",
+    sub_guarded: "仓位仍由链上止损保护", sub_nothing: "没有风险敞口", sub_fired: "超时保护已触发 · 需所有者重启",
+    sub_heartbeat: (n) => `每个周期发送心跳 · 已运行 ${n} 个周期`, sub_ready: "点击「启动代理」开始", fired: "已触发",
+    mode_sim: "模拟市场", mode_paper: "基于 HSKSwap 实时价格的模拟交易", mode_live: "HSK Chain 实盘",
+    vault: "金库", vault_none: "金库尚未部署", strategist: "策略师", deterministic: "规则驱动", profile: "模式",
+    twap: "10 分钟 TWAP", signal: "信号", no_cex: "无 CEX",
+    pos_empty: "暂无持仓。只有风控官和合约都同意时，代理才会开仓。",
+    stop: "止损", entry: "开仓", tp: "止盈",
+    trades_empty: "暂无交易。",
+    t_buy: (n) => `买入 ${n} USDT`, t_sell: "卖出", t_stop_raised: "上调止损", t_hold: "持有（心跳）", t_keeper: (w) => `守护者执行${w}`, refused: "被拒绝",
+    why_STOP_LOSS: "止损", why_TAKE_PROFIT: "止盈", why_DEAD_MAN: "超时保护",
+    rules: (p) => [
+      ["每个仓位开仓即带止损", `止损位于开仓价下方 ${p.minStopTicks / 100}% 至 ${p.maxStopTicks / 100}%。AI 只能上调，永远不能下调。`],
+      ["任何人都可以执行已触发的止损", `并获得 ${p.keeperRewardBps / 100}% 的奖励。不需要我们的服务器在线。`],
+      ["超时保护", `${Math.round(p.heartbeatTimeout / 60)} 分钟没有心跳，任何人都可以把所有仓位换回 USDT，金库自动暂停。`],
+      ["价格来自资金池的 TWAP", "闪电砸盘无法触发止损，成交价以 TWAP 为底线。"],
+      ["仓位上限", `单仓 ${p.maxPositionBps / 100}%，总计 ${p.maxExposureBps / 100}%，单日亏损达 −${p.maxDailyLossBps / 100}% 后停止交易。`],
+      ["只有你的钱包能提款", "代理密钥只能在这些规则内交易，别无他权。"],
+    ],
+    greeting: "你好，我是 KAVACH。可以问我交易情况，也可以调整我的交易方式：「保守一点」「止损3%」「只交易ETH」「暂停」。",
+    chips: ["现在怎么样？", "为什么不交易？", "保守一点", "止损3%", "只交易ETH和BTC", "交易所有市场", "全部平仓"],
+    unreachable: "无法连接代理，它还在运行吗？",
+    replay_note: "模拟会话录像，结尾为崩盘测试。运行 <b>npm run sim</b> 体验实时代理。",
+    replay_again: "从头播放",
+    replay_chat: "此页面为录像。请在本地启动代理（npm run sim）进行实时对话。",
+  },
+};
+let LANG = "en";
+try { const saved = localStorage.getItem("kavach-lang"); if (I18N[saved]) LANG = saved; } catch { /* storage unavailable */ }
+const t = (k) => I18N[LANG][k] ?? I18N.en[k];
+let greetEl = null;
+function greet() {
+  greetEl = document.createElement("div");
+  greetEl.className = "msg kavach";
+  greetEl.textContent = t("greeting");
+  $("msgs").prepend(greetEl);
+}
+function setLang(l) {
+  LANG = I18N[l] ? l : "en";
+  try { localStorage.setItem("kavach-lang", LANG); } catch { /* storage unavailable */ }
+  document.documentElement.lang = LANG;
+  document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = t(el.dataset.i18n)));
+  $("chatIn").placeholder = t("placeholder");
+  document.querySelectorAll("#lang button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === LANG)));
+  $("chips").innerHTML = t("chips").map((c) => `<button class="chip" type="button">${c}</button>`).join("");
+  if (greetEl) greetEl.textContent = t("greeting");
+  else greet();
+  if (S) render(S);
+  document.dispatchEvent(new Event("langchange"));
+}
+
 const NAMES = { WHSK: "HSK", WETH: "ETH", WBTC: "BTC" };
 let S = null;
 
@@ -244,21 +449,22 @@ function render(d) {
   const pol = d.policy;
 
   // badges
-  const modeTxt = { sim: "Simulated market", paper: "Paper trading on live HSKSwap prices", live: "Live on HSK Chain" }[d.mode];
+  const modeTxt = t("mode_" + d.mode);
   $("badges").innerHTML =
     `<span class="badge ${d.mode === "live" ? "live" : ""}"><b>${modeTxt}</b></span>` +
-    (d.vault ? `<span class="badge">Vault <a href="${d.explorer}/address/${d.vault}" target="_blank" rel="noopener">${short(d.vault)}</a></span>` : `<span class="badge">Vault not deployed yet</span>`) +
-    `<span class="badge">Strategist <b>${esc(d.llm || "deterministic")}</b></span>` +
-    `<span class="badge">Profile <b>${esc(d.settings.risk)}</b></span>`;
+    (d.vault ? `<span class="badge">${t("vault")} <a href="${d.explorer}/address/${d.vault}" target="_blank" rel="noopener">${short(d.vault)}</a></span>` : `<span class="badge">${t("vault_none")}</span>`) +
+    `<span class="badge">${t("strategist")} <b>${esc(d.llm || t("deterministic"))}</b></span>` +
+    `<span class="badge">${t("profile")} <b>${esc(d.settings.risk)}</b></span>`;
 
   // guard
   const g = $("guard");
-  g.className = "guard" + (d.crashed ? " dead" : st.paused ? " paused" : "");
-  $("aiState").textContent = d.crashed ? "AI agent offline" : st.paused ? "Vault paused" : d.settings.agentPaused ? "AI agent paused by you" : "AI agent alive";
+  const idle = !d.running && !d.crashed && !st.paused;
+  g.className = "guard" + (d.crashed ? " dead" : st.paused ? " paused" : idle ? " idle" : "");
+  $("aiState").textContent = d.crashed ? t("ai_offline") : st.paused ? t("vault_paused") : idle ? t("ai_ready") : d.settings.agentPaused ? t("ai_paused_you") : t("ai_alive");
   $("aiSub").textContent = d.crashed
-    ? (st.positions.length ? "Positions still guarded by on-chain stops" : "Nothing at risk")
-    : st.paused ? "Dead-man switch fired · owner must restart" : `Heartbeat every cycle · ${d.cycles} cycles`;
-  $("countdown").textContent = st.paused ? "fired" : mmss(st.deadManIn);
+    ? (st.positions.length ? t("sub_guarded") : t("sub_nothing"))
+    : st.paused ? t("sub_fired") : idle ? t("sub_ready") : t("sub_heartbeat")(d.cycles);
+  $("countdown").textContent = st.paused ? t("fired") : mmss(st.deadManIn);
 
   // kpis
   $("equity").textContent = usd(st.equity);
@@ -266,10 +472,10 @@ function render(d) {
   $("today").textContent = sgn(today); $("today").style.color = today >= 0 ? "var(--gain)" : "var(--loss)";
   $("realized").textContent = sgn(st.realizedPnl); $("realized").style.color = st.realizedPnl >= 0 ? "var(--gain)" : "var(--loss)";
   const expoPct = st.equity ? st.exposure / st.equity * 100 : 0, expoMax = pol.maxExposureBps / 100;
-  $("expoL").textContent = `${expoPct.toFixed(1)}% of max ${expoMax}%`;
+  $("expoL").textContent = t("of_max")(expoPct.toFixed(1), expoMax);
   setBar("expoB", expoPct / expoMax);
   const lossPct = st.dayStartEquity > 0 ? Math.max(0, (st.dayStartEquity - st.equity) / st.dayStartEquity * 100) : 0, lossMax = pol.maxDailyLossBps / 100;
-  $("lossL").textContent = `${lossPct.toFixed(2)}% of ${lossMax}%`;
+  $("lossL").textContent = t("of")(lossPct.toFixed(2), lossMax);
   setBar("lossB", lossPct / lossMax);
   drawChart(d.equityCurve);
 
@@ -280,11 +486,11 @@ function render(d) {
     const sc = sig ? Math.max(-1.5, Math.min(1.5, sig.score)) : 0;
     const w = Math.abs(sc) / 1.5 * 50;
     return `<div class="mkt ${enabled ? "" : "off"}">
-      <div class="name"><span>${m.name}</span><span class="spread num" style="color:${!Number.isFinite(sp) ? "var(--muted)" : sp < 0 ? "var(--gain)" : "var(--loss)"}">${Number.isFinite(sp) ? (sp >= 0 ? "+" : "") + sp.toFixed(2) + "%" : "no CEX"}</span></div>
+      <div class="name"><span>${m.name}</span><span class="spread num" style="color:${!Number.isFinite(sp) ? "var(--muted)" : sp < 0 ? "var(--gain)" : "var(--loss)"}">${Number.isFinite(sp) ? (sp >= 0 ? "+" : "") + sp.toFixed(2) + "%" : t("no_cex")}</span></div>
       <div class="px num">${px(m.dexPrice)} <span style="color:var(--muted);font-size:13px">USDT</span></div>
       <div class="row"><span>CEX ${esc(m.cexSource || "")}</span><span class="num">${px(m.cexPrice)}</span></div>
-      <div class="row"><span>10-min TWAP</span><span class="num">${px(m.twapPrice)}</span></div>
-      <div class="row"><span>Signal</span><span class="num">${sig ? sig.score.toFixed(2) : "–"} · RSI ${sig ? sig.rsi.toFixed(0) : "–"}</span></div>
+      <div class="row"><span>${t("twap")}</span><span class="num">${px(m.twapPrice)}</span></div>
+      <div class="row"><span>${t("signal")}</span><span class="num">${sig ? sig.score.toFixed(2) : "–"} · RSI ${sig ? sig.rsi.toFixed(0) : "–"}</span></div>
       <div class="score" aria-hidden="true"><i style="left:${sc >= 0 ? 50 : 50 - w}%;width:${w}%;background:${sc >= 0 ? "var(--gain)" : "var(--loss)"}"></i></div>
     </div>`;
   }).join("");
@@ -300,10 +506,10 @@ function render(d) {
         <div class="tick" style="left:${Math.max(0, Math.min(1, entryAt)) * 100}%" title="entry"></div>
         <div class="me" style="left:${prog * 100}%"><svg viewBox="0 0 22 26"><path d="M11 1 20 4.5v7.5c0 6-4 10.5-9 12.5-5-2-9-6.5-9-12.5V4.5z" fill="#f2a93b" stroke="#141a33" stroke-width="1.5"/></svg></div>
       </div>
-      <div class="rail-l num"><span>stop ${px(p.stopPrice)}</span><span>entry ${px(p.entryPrice)} · ${usd(p.quoteIn, 0)} USDT</span><span>take-profit ${px(p.tpPrice)}</span></div>
+      <div class="rail-l num"><span>${t("stop")} ${px(p.stopPrice)}</span><span>${t("entry")} ${px(p.entryPrice)} · ${usd(p.quoteIn, 0)} USDT</span><span>${t("tp")} ${px(p.tpPrice)}</span></div>
       ${p.reason ? `<div class="why">${esc(p.reason)}</div>` : ""}
     </div>`;
-  }).join("") : `<div class="empty">No open positions. The agent opens one only when the Risk Officer and the contract both agree.</div>`;
+  }).join("") : `<div class="empty">${t("pos_empty")}</div>`;
 
   // feed
   const feedEl = $("feed");
@@ -312,33 +518,25 @@ function render(d) {
   if (atBottom) feedEl.scrollTop = feedEl.scrollHeight;
 
   // trades
-  $("trades").innerHTML = d.trades.filter((t) => t.type !== "hold" || t.tx).slice(0, 14).map((t) => {
-    const what = t.type === "keeper" ? `${t.why.replace("_", " ").toLowerCase()} by keeper` : t.type === "open" ? `buy ${usd(t.size, 0)} USDT` : t.type === "close" ? "sell" : t.type === "trail" ? "stop raised" : "hold (heartbeat)";
-    const res = !t.ok ? `<span class="neg-c">${esc(t.error || "refused")}</span>` : Number.isFinite(t.pnl) ? `<span class="${t.pnl >= 0 ? "pos-c" : "neg-c"}">${sgn(t.pnl)}</span>` : "ok";
-    const tx = t.tx ? ` <a href="${d.explorer}/tx/${t.tx}" target="_blank" rel="noopener">tx</a>` : "";
-    return `<tr><td>${t.sym ? NAMES[t.sym] : "–"}</td><td>${what}</td><td class="r num">${res}${tx}</td></tr>`;
-  }).join("") || `<tr><td class="empty">No trades yet.</td></tr>`;
+  $("trades").innerHTML = d.trades.filter((tr) => tr.type !== "hold" || tr.tx).slice(0, 14).map((tr) => {
+    const what = tr.type === "keeper" ? t("t_keeper")(t("why_" + tr.why)) : tr.type === "open" ? t("t_buy")(usd(tr.size, 0)) : tr.type === "close" ? t("t_sell") : tr.type === "trail" ? t("t_stop_raised") : t("t_hold");
+    const res = !tr.ok ? `<span class="neg-c">${esc(tr.error || t("refused"))}</span>` : Number.isFinite(tr.pnl) ? `<span class="${tr.pnl >= 0 ? "pos-c" : "neg-c"}">${sgn(tr.pnl)}</span>` : "ok";
+    const tx = tr.tx ? ` <a href="${d.explorer}/tx/${tr.tx}" target="_blank" rel="noopener">tx</a>` : "";
+    return `<tr><td>${tr.sym ? NAMES[tr.sym] : "–"}</td><td>${what}</td><td class="r num">${res}${tx}</td></tr>`;
+  }).join("") || `<tr><td class="empty">${t("trades_empty")}</td></tr>`;
 
   // rules
-  $("rules").innerHTML = [
-    ["Every position is born with a stop-loss", `between ${pol.minStopTicks / 100}% and ${pol.maxStopTicks / 100}% below entry. The AI can raise it, never lower it.`],
-    ["Anyone can execute a triggered stop", `and earns ${pol.keeperRewardBps / 100}% for it. No server of ours needs to be up.`],
-    ["Dead-man switch", `after ${Math.round(pol.heartbeatTimeout / 60)} min without a heartbeat, anyone can unwind every position to USDT and the vault pauses.`],
-    ["Prices come from the pool's TWAP", `a flash dump cannot trigger a stop, and fills are floored at the TWAP.`],
-    ["Size limits", `${pol.maxPositionBps / 100}% per position, ${pol.maxExposureBps / 100}% total, trading stops after −${pol.maxDailyLossBps / 100}% in a day.`],
-    ["Only your wallet withdraws", `the agent key can trade inside these rules and nothing else.`],
-  ].map(([b, t]) => `<li><span>◆</span><span><b>${b}.</b> ${t[0].toUpperCase() + t.slice(1)}</span></li>`).join("");
+  $("rules").innerHTML = t("rules")(pol).map(([b, txt]) => `<li><span>◆</span><span><b>${b}.</b> ${txt}</span></li>`).join("");
 
   if (!window.KAVACH_DEMO) {
     document.querySelector('[data-a="crashtest"]').disabled = d.crashed;
     document.querySelector('[data-a="plug"]').disabled = d.crashed;
     document.querySelector('[data-a="revive"]').disabled = !d.crashed && !st.paused;
   }
-  $("btnRun").textContent = d.running ? "Pause agent loop" : "Start agent";
+  $("btnRun").textContent = d.running ? t("btn_stop") : t("btn_start");
   $("btnRun").dataset.a = d.running ? "stop" : "start";
-  $("ctlHint").textContent = d.mode === "sim"
-    ? "Simulated market: 1 cycle = 1 market minute, dead-man switch after 15 minutes."
-    : d.mode === "live" ? "Live: trades are real transactions. Stops are executed by the public keeper bot." : "Paper: real HSKSwap prices and quotes, no transactions.";
+  $("btnRun").classList.toggle("go", !d.running && !window.KAVACH_DEMO);
+  $("ctlHint").textContent = t("hint_" + d.mode);
 }
 
 function setBar(id, f) {
@@ -364,8 +562,6 @@ function drawChart(curve) {
 }
 
 // chat
-const CHIPS = ["How am I doing?", "कैसा चल रहा है?", "现在怎么样？", "Why are you not trading?", "Be more careful", "Stop-loss 3%", "Only trade ETH and BTC", "Trade everything again", "Close everything"];
-$("chips").innerHTML = CHIPS.map((c) => `<button class="chip" type="button">${c}</button>`).join("");
 $("chips").addEventListener("click", (e) => { if (e.target.matches(".chip")) window.send(e.target.textContent); });
 $("chatForm").addEventListener("submit", (e) => { e.preventDefault(); const v = $("chatIn").value.trim(); if (v) window.send(v); $("chatIn").value = ""; });
 function addMsg(who, text) { const el = document.createElement("div"); el.className = "msg " + who; el.textContent = text; $("msgs").appendChild(el); $("msgs").scrollTop = 1e9; }
@@ -373,11 +569,12 @@ window.send = send;
 async function send(text) {
   addMsg("you", text);
   try {
-    const r = await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) }).then((r) => r.json());
-    addMsg("kavach", r.reply || r.error || "No reply.");
-  } catch { addMsg("kavach", "The agent is not reachable. Is it still running?"); }
+    const r = await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, lang: LANG }) }).then((r) => r.json());
+    addMsg("kavach", r.reply || r.error || "–");
+  } catch { addMsg("kavach", t("unreachable")); }
 }
-addMsg("kavach", "Hi, I'm KAVACH. Ask me how the book is doing, or change how I trade: “more careful”, “stop 3%”, “only ETH”, “pause”. I understand English, Deutsch, हिन्दी and 中文.");
+$("lang").addEventListener("click", (e) => { const l = e.target.closest("button")?.dataset.lang; if (l) setLang(l); });
+setLang(LANG);
 
 // controls
 document.querySelector(".controls").addEventListener("click", async (e) => {
@@ -398,18 +595,20 @@ function replay({ frames, chats }) {
   let i = 0, curve = [], timer = null;
   const note = document.createElement("div");
   note.className = "replay";
-  note.innerHTML = `<span>Recorded replay of a simulated session, ending with the crash test. Run <b>npm run sim</b> for the live agent.</span><button class="btn" id="again" type="button">Replay from start</button>`;
+  const again = () => { i = 0; curve = []; $("msgs").innerHTML = ""; greetEl = null; greet(); tick(); };
+  const paintNote = () => { note.innerHTML = `<span>${t("replay_note")}</span><button class="btn" id="again" type="button">${t("replay_again")}</button>`; $("again").onclick = again; };
   document.body.prepend(note);
-  $("again").onclick = () => { i = 0; curve = []; $("msgs").innerHTML = ""; tick(); };
+  paintNote();
+  document.addEventListener("langchange", paintNote);
   document.querySelectorAll(".controls button").forEach((b) => (b.disabled = true));
-  window.send = async (text) => { addMsg("you", text); addMsg("kavach", "This page is a recording. Start the agent locally (npm run sim) to talk to it live."); };
+  window.send = async (text) => { addMsg("you", text); addMsg("kavach", t("replay_chat")); };
   function tick() {
     clearTimeout(timer);
     const f = frames[i];
     curve.push([f.state.now, f.state.equity]);
     for (const c of chats.filter((c) => c.frame === i)) { addMsg("you", c.you); addMsg("kavach", c.kavach); }
     render({ ...f, equityCurve: curve, running: true });
-    $("ctlHint").textContent = "Controls are disabled in the recording.";
+    $("ctlHint").textContent = t("hint_replay");
     i++;
     if (i < frames.length) timer = setTimeout(tick, i > frames.length - 32 ? 1100 : 450);
   }

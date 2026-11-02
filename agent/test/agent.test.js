@@ -46,3 +46,11 @@ test("chat answers in the language it is asked in", () => {
   assert.equal(detectLang("Wie läuft es?"), "de");
   assert.equal(detectLang("How am I doing?"), "en");
 });
+
+import { replyLang } from "../src/chat.js";
+test("the dashboard language decides the reply language for English text", () => {
+  assert.equal(replyLang("how am I doing?", "de"), "de");
+  assert.equal(replyLang("现在怎么样？", "de"), "zh");
+  assert.equal(replyLang("Wie läuft es?", "en"), "de");
+  assert.equal(replyLang("status", undefined), "en");
+});
