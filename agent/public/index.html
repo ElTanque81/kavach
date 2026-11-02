@@ -205,7 +205,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
       <div class="chat">
         <div class="chips" id="chips"></div>
         <div class="msgs" id="msgs"></div>
-        <form id="chatForm"><input id="chatIn" placeholder="How am I doing? / Wie läuft's?" aria-label="Message to the agent" autocomplete="off"><button class="btn primary">Send</button></form>
+        <form id="chatForm"><input id="chatIn" placeholder="Ask in English, Deutsch, हिन्दी or 中文" aria-label="Message to the agent" autocomplete="off"><button class="btn primary">Send</button></form>
       </div>
     </section>
     <section>
@@ -364,7 +364,7 @@ function drawChart(curve) {
 }
 
 // chat
-const CHIPS = ["How am I doing?", "Why are you not trading?", "Be more careful", "Stop-loss 3%", "Only trade ETH and BTC", "Trade everything again", "Close everything"];
+const CHIPS = ["How am I doing?", "कैसा चल रहा है?", "现在怎么样？", "Why are you not trading?", "Be more careful", "Stop-loss 3%", "Only trade ETH and BTC", "Trade everything again", "Close everything"];
 $("chips").innerHTML = CHIPS.map((c) => `<button class="chip" type="button">${c}</button>`).join("");
 $("chips").addEventListener("click", (e) => { if (e.target.matches(".chip")) window.send(e.target.textContent); });
 $("chatForm").addEventListener("submit", (e) => { e.preventDefault(); const v = $("chatIn").value.trim(); if (v) window.send(v); $("chatIn").value = ""; });
@@ -377,7 +377,7 @@ async function send(text) {
     addMsg("kavach", r.reply || r.error || "No reply.");
   } catch { addMsg("kavach", "The agent is not reachable. Is it still running?"); }
 }
-addMsg("kavach", "Hi, I'm KAVACH. Ask me how the book is doing, or change how I trade: “more careful”, “stop 3%”, “only ETH”, “pause”.");
+addMsg("kavach", "Hi, I'm KAVACH. Ask me how the book is doing, or change how I trade: “more careful”, “stop 3%”, “only ETH”, “pause”. I understand English, Deutsch, हिन्दी and 中文.");
 
 // controls
 document.querySelector(".controls").addEventListener("click", async (e) => {

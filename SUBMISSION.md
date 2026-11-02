@@ -20,7 +20,7 @@ AI Agent Trading
 - Triggers use the pool's own 10-minute TWAP, so flash-loan dumps can't fire a stop; every fill is floored against the TWAP (agent −1%, keeper −3%), so a sandwich can only delay a stop.
 - On-chain policy: max 20% per position, 60% exposure, −5% daily loss halt, mandatory stop between 1% and 8%, cooldown, spot/TWAP deviation guard. The agent can trail a stop up but never loosen it, and can never withdraw.
 - Agent council: Scout (HSKSwap + Binance/OKX/Bybit/Gate prices), Quant (DEX/CEX spread capture, EMA momentum, RSI, volatility), Risk Officer (volatility-based sizing and stops, veto), optional LLM Strategist (may only shrink or reject), Executor (logs decisions on-chain as heartbeats).
-- Natural-language control in English and German: "how am I doing?", "be more careful", "stop-loss 3%", "only ETH", "close everything". The chat can only move the agent inside the on-chain policy.
+- Natural-language control in English, German, Hindi (हिन्दी) and Chinese (中文): "how am I doing?", "be more careful", "stop-loss 3%", "only ETH", "close everything". The chat can only move the agent inside the on-chain policy.
 - Dashboard with live positions shown as a rail between stop and take-profit, council feed, dead-man countdown and a one-click crash test.
 
 **Quality**

@@ -1,5 +1,6 @@
 // Natural-language control: "how am I doing?", "be more careful", "stop at 3%", "only trade ETH",
-// "close everything", "pause". Uses the LLM when configured, otherwise a bilingual (DE/EN) rule parser.
+// "close everything", "pause". Uses the LLM when configured, otherwise a rule parser that understands
+// English, German, Hindi and Chinese and answers in the language it was asked in.
 // The chat can only move the agent INSIDE the on-chain policy - loosening the policy needs the owner wallet.
 import { PRESETS } from "./council.js";
 import { DISPLAY } from "./config.js";
@@ -7,27 +8,45 @@ import { llmJson, llmEnabled } from "./llm.js";
 import { fmt, fmtUsd, fmtPrice } from "./math.js";
 
 const SYM = { hsk: "WHSK", whsk: "WHSK", eth: "WETH", weth: "WETH", ether: "WETH", ethereum: "WETH", btc: "WBTC", wbtc: "WBTC", bitcoin: "WBTC" };
-const isGerman = (t) => /\b(wie|ist|und|nur|mehr|weniger|alles|risiko|zeig|bitte|kein|keine|ohne|wieder|sei|mach|gewinn|verlust|stopp|halt|handel|auch|warum|wieso|machst|nichts|nix|tust|du)\b|vorsicht|schlie|läuft|größe|aggressiver/i.test(t);
+// market names written in Devanagari / Chinese
+const SYM_INTL = [
+  [/एचएसके|हैशकी/, "WHSK"],
+  [/ईथर|इथेरियम|एथेरियम/, "WETH"],
+  [/बिटकॉइन|बिटकोइन/, "WBTC"],
+  [/以太坊|以太/, "WETH"],
+  [/比特币/, "WBTC"],
+];
+
+/** de | en | hi | zh */
+export function detectLang(t) {
+  if (/[ऀ-ॿ]/.test(t)) return "hi";
+  if (/[一-鿿]/.test(t)) return "zh";
+  if (/\b(wie|ist|und|nur|mehr|weniger|alles|risiko|zeig|bitte|kein|keine|ohne|wieder|sei|mach|gewinn|verlust|stopp|halt|handel|auch|warum|wieso|machst|nichts|nix|tust|du)\b|vorsicht|schlie|läuft|größe|aggressiver/i.test(t)) return "de";
+  return "en";
+}
+
+/** pick the text for a language, falling back to English */
+const L = (lang, texts) => texts[lang] ?? texts.en;
 
 export async function handleChat(text, ctx) {
-  const de = isGerman(text);
+  const lang = detectLang(text);
   if (llmEnabled() && ctx.settings.useLlm) {
     const r = await llmJson(
       "You control KAVACH, an AI spot-trading agent on HSKSwap (HSK Chain). Markets: WHSK (HSK), WETH (ETH), WBTC (BTC) vs USDT. " +
-        "Interpret the user's message (any language) and reply in the SAME language, briefly (max 60 words), using the provided state for facts. " +
+        "Interpret the user's message (any language, including Hindi and Chinese) and reply in the SAME language, briefly (max 60 words), using the provided state for facts. " +
         "You may change settings only within the on-chain policy limits given. " +
         'Reply ONLY with JSON: {"reply":string,"set":{"risk"?:"conservative|balanced|aggressive","positionPct"?:number,"stopPct"?:number|null,"tpPct"?:number|null,"spreadEntry"?:number,"markets"?:{"WHSK"?:bool,"WETH"?:bool,"WBTC"?:bool},"trailing"?:bool,"agentPaused"?:bool},"command":"none|close_all|run_cycle"}',
       { message: text, state: summary(ctx), settings: ctx.settings, policyLimits: limits(ctx.policy) },
       500
     );
     if (r && typeof r.reply === "string") {
-      const applied = apply(r.set || {}, ctx, de);
+      const applied = apply(r.set || {}, ctx, lang);
       if (r.command === "close_all") await ctx.engine.closeAll("closed via chat");
       if (r.command === "run_cycle") await ctx.engine.cycle();
       return { reply: [r.reply, ...applied.warnings].join(" "), changed: applied.changed };
     }
   }
-  return rules(text, ctx, de);
+  return rules(text, ctx, lang);
 }
 
 function limits(p) {
@@ -51,21 +70,25 @@ function summary({ state, snap, settings }) {
 }
 
 /** apply a settings patch, clamped to the on-chain policy */
-function apply(set, { settings, policy }, de) {
+function apply(set, { settings, policy }, lang) {
   const warnings = [];
   const changed = [];
-  const L = limits(policy);
+  const P = limits(policy);
   if (set.risk && PRESETS[set.risk]) {
     Object.assign(settings, PRESETS[set.risk], { risk: set.risk });
     changed.push(`risk=${set.risk}`);
   }
   if (Number.isFinite(set.positionPct)) {
     let v = set.positionPct;
-    if (v > L.maxPositionPct) {
-      warnings.push(de
-        ? `Hinweis: Der Vault erlaubt on-chain max. ${L.maxPositionPct}% pro Position – das kann nur deine Owner-Wallet ändern (setPolicy).`
-        : `Note: the vault enforces max ${L.maxPositionPct}% per position on-chain - only your owner wallet can raise it (setPolicy).`);
-      v = L.maxPositionPct;
+    if (v > P.maxPositionPct) {
+      const m = P.maxPositionPct;
+      warnings.push(L(lang, {
+        de: `Hinweis: Der Vault erlaubt on-chain max. ${m}% pro Position – das kann nur deine Owner-Wallet ändern (setPolicy).`,
+        en: `Note: the vault enforces max ${m}% per position on-chain - only your owner wallet can raise it (setPolicy).`,
+        hi: `ध्यान दें: वॉल्ट ऑन-चेन हर पोजीशन को अधिकतम ${m}% तक सीमित करता है – इसे सिर्फ़ आपका ओनर वॉलेट बदल सकता है (setPolicy)।`,
+        zh: `注意：金库在链上限制每个仓位最多 ${m}% — 只有你的所有者钱包可以提高上限（setPolicy）。`,
+      }));
+      v = m;
     }
     settings.positionPct = Math.max(1, v);
     changed.push(`positionPct=${settings.positionPct}`);
@@ -74,19 +97,23 @@ function apply(set, { settings, policy }, de) {
     if (set.stopPct === null) settings.stopPctOverride = null;
     else {
       let v = set.stopPct;
-      const [lo, hi] = L.stopPctRange;
+      const [lo, hi] = P.stopPctRange;
       if (v < lo || v > hi) {
-        warnings.push(de
-          ? `Stop-Loss muss on-chain zwischen ${lo}% und ${hi}% liegen – ich nehme ${Math.min(hi, Math.max(lo, v))}%.`
-          : `The on-chain stop range is ${lo}%-${hi}% - using ${Math.min(hi, Math.max(lo, v))}%.`);
-        v = Math.min(hi, Math.max(lo, v));
+        const use = Math.min(hi, Math.max(lo, v));
+        warnings.push(L(lang, {
+          de: `Stop-Loss muss on-chain zwischen ${lo}% und ${hi}% liegen – ich nehme ${use}%.`,
+          en: `The on-chain stop range is ${lo}%-${hi}% - using ${use}%.`,
+          hi: `ऑन-चेन स्टॉप-लॉस ${lo}% से ${hi}% के बीच होना चाहिए – मैं ${use}% इस्तेमाल कर रहा हूँ।`,
+          zh: `链上止损范围是 ${lo}%–${hi}%，已改用 ${use}%。`,
+        }));
+        v = use;
       }
       settings.stopPctOverride = v;
     }
     changed.push(`stop=${settings.stopPctOverride ?? "auto"}`);
   }
   if (set.tpPct !== undefined) {
-    settings.tpPctOverride = set.tpPct === null ? null : Math.min(L.maxTakeProfitPct, Math.max(0.2, set.tpPct));
+    settings.tpPctOverride = set.tpPct === null ? null : Math.min(P.maxTakeProfitPct, Math.max(0.2, set.tpPct));
     changed.push(`tp=${settings.tpPctOverride ?? "auto"}`);
   }
   if (Number.isFinite(set.spreadEntry)) {
@@ -108,83 +135,151 @@ function apply(set, { settings, policy }, de) {
   return { warnings, changed };
 }
 
-async function rules(text, ctx, de) {
+async function rules(text, ctx, lang) {
   const t = text.toLowerCase();
   const { state, settings } = ctx;
-  const T = (g, e) => (de ? g : e);
+  const T = (texts) => L(lang, texts);
+  // a number with % (or "प्रतिशत" / "百分之") within a few characters after a keyword
   const pct = (re) => {
     const m = t.match(re);
     return m ? parseFloat(m[1].replace(",", ".")) : null;
   };
+  const NUM = String.raw`(\d+(?:[.,]\d+)?)\s*(?:%|प्रतिशत|％)`;
+  const near = (kw) => new RegExp(`(?:${kw})[^\\d]{0,14}?${NUM}`);
 
   // ---- commands
-  if (/(close|schlie(ß|ss)e?|verkauf|exit).*(all|alles|everything|positionen)|alles (verkaufen|schließen)/.test(t)) {
+  if (
+    /(close|schlie(ß|ss)e?|verkauf|exit).*(all|alles|everything|positionen)|alles (verkaufen|schließen)/.test(t) ||
+    /सब(?:\s|ी\s)?.*(बंद|बेच)|सारी पोजीशन.*(बंद|बेच)|पोजीशन बंद/.test(t) ||
+    /全部平仓|平仓|全部卖出|关闭所有|全部关闭/.test(t)
+  ) {
     const n = state.positions.length;
-    await ctx.engine.closeAll(T("per Chat geschlossen", "closed via chat"));
-    return { reply: T(`Erledigt – ${n} Position(en) werden geschlossen.`, `Done - closing ${n} position(s).`), changed: ["close_all"] };
+    await ctx.engine.closeAll("closed via chat");
+    return {
+      reply: T({
+        de: `Erledigt – ${n} Position(en) werden geschlossen.`,
+        en: `Done - closing ${n} position(s).`,
+        hi: `ठीक है – ${n} पोजीशन बंद की जा रही हैं।`,
+        zh: `好的，正在平掉 ${n} 个仓位。`,
+      }),
+      changed: ["close_all"],
+    };
   }
-  if (/\b(pause|pausier|stopp?(e)? (den )?(agent|trading|handel)|halt|hör auf|stop trading)\b/.test(t) && !/stop.?loss/.test(t)) {
-    apply({ agentPaused: true }, ctx, de);
-    return { reply: T("Pausiert. Ich eröffne nichts Neues, aber offene Positionen bleiben durch Stop-Loss und Take-Profit on-chain geschützt.", "Paused. No new positions; open ones stay protected by their on-chain stop-loss and take-profit."), changed: ["paused"] };
+  if (
+    (/\b(pause|pausier|stopp?(e)? (den )?(agent|trading|handel)|halt|hör auf|stop trading)\b/.test(t) && !/stop.?loss/.test(t)) ||
+    /रोको|रुको|रोक दो|पॉज़|पॉज|ट्रेडिंग बंद/.test(t) ||
+    /暂停|停止交易|别交易/.test(t)
+  ) {
+    apply({ agentPaused: true }, ctx, lang);
+    return {
+      reply: T({
+        de: "Pausiert. Ich eröffne nichts Neues, aber offene Positionen bleiben durch Stop-Loss und Take-Profit on-chain geschützt.",
+        en: "Paused. No new positions; open ones stay protected by their on-chain stop-loss and take-profit.",
+        hi: "रुक गया। मैं कोई नई पोजीशन नहीं खोलूँगा, लेकिन खुली पोजीशन ऑन-चेन स्टॉप-लॉस और टेक-प्रॉफ़िट से सुरक्षित रहेंगी।",
+        zh: "已暂停。不再开新仓，已有仓位仍由链上止损和止盈保护。",
+      }),
+      changed: ["paused"],
+    };
   }
-  if (/\b(start|weiter|resume|fortsetzen|los geht|go)\b/.test(t)) {
-    apply({ agentPaused: false }, ctx, de);
-    return { reply: T("Läuft wieder – ich suche nach Setups.", "Running again - scanning for setups."), changed: ["resumed"] };
+  if (/\b(start|weiter|resume|fortsetzen|los geht|go)\b/.test(t) || /फिर से शुरू|शुरू करो|चालू करो/.test(t) || /继续|恢复|开始交易/.test(t)) {
+    apply({ agentPaused: false }, ctx, lang);
+    return {
+      reply: T({
+        de: "Läuft wieder – ich suche nach Setups.",
+        en: "Running again - scanning for setups.",
+        hi: "फिर से चालू – मैं ट्रेडिंग के मौक़े ढूँढ रहा हूँ।",
+        zh: "已恢复，正在寻找交易机会。",
+      }),
+      changed: ["resumed"],
+    };
   }
 
   const patch = {};
-  if (/(konservativ|vorsichtig|weniger risiko|risiko runter|safer|careful|conservative|less risk)/.test(t)) patch.risk = "conservative";
-  else if (/(aggressiv|mehr risiko|risiko hoch|more risk|aggressive|yolo)/.test(t)) patch.risk = "aggressive";
-  else if (/(ausgewogen|normal|balanced|standard)/.test(t)) patch.risk = "balanced";
+  if (/(konservativ|vorsichtig|weniger risiko|risiko runter|safer|careful|conservative|less risk)/.test(t) || /सावधान|कम जोखिम|कम रिस्क/.test(t) || /保守|谨慎|小心|降低风险|低风险/.test(t)) patch.risk = "conservative";
+  else if (/(aggressiv|mehr risiko|risiko hoch|more risk|aggressive|yolo)/.test(t) || /आक्रामक|ज़्यादा जोखिम|ज्यादा जोखिम|ज़्यादा रिस्क|ज्यादा रिस्क/.test(t) || /激进|提高风险|高风险/.test(t)) patch.risk = "aggressive";
+  else if (/(ausgewogen|normal|balanced|standard)/.test(t) || /संतुलित/.test(t) || /平衡|均衡/.test(t)) patch.risk = "balanced";
 
-  const stop = pct(/stop.?(?:loss)?\D{0,12}?(\d+(?:[.,]\d+)?)\s*%/);
+  const stop = pct(near("stop.?(?:loss)?|स्टॉप.?लॉस|स्टॉप|止损"));
   if (stop !== null) patch.stopPct = stop;
-  const tp = pct(/(?:take.?profit|tp|gewinnziel)\D{0,12}?(\d+(?:[.,]\d+)?)\s*%/);
+  const tp = pct(near("take.?profit|\\btp\\b|gewinnziel|टेक.?प्रॉफ़िट|टेक.?प्रॉफिट|मुनाफ़ा लक्ष्य|止盈"));
   if (tp !== null) patch.tpPct = tp;
-  const size = pct(/(?:position(?:sgr(?:ö|oe)(?:ß|ss)e)?|size|gr(?:ö|oe)(?:ß|ss)e|einsatz)\D{0,12}?(\d+(?:[.,]\d+)?)\s*%/);
-  if (size !== null) patch.positionPct = size;
-  const spread = pct(/spread\D{0,12}?(\d+(?:[.,]\d+)?)\s*%/);
+  const size = pct(near("position(?:sgr(?:ö|oe)(?:ß|ss)e)?|size|gr(?:ö|oe)(?:ß|ss)e|einsatz|पोजीशन|पोज़ीशन|साइज़|साइज|仓位"));
+  if (size !== null && stop === null && tp === null) patch.positionPct = size;
+  const spread = pct(near("spread|स्प्रेड|价差"));
   if (spread !== null) patch.spreadEntry = spread;
   if (/trailing.*(aus|off)|kein trailing/.test(t)) patch.trailing = false;
   else if (/trailing.*(an|on)/.test(t)) patch.trailing = true;
 
-  // market selection: "nur eth", "only btc and eth", "kein hsk", "without btc"
-  const mentioned = [...new Set([...t.matchAll(/\b(hsk|whsk|eth|weth|ether|ethereum|btc|wbtc|bitcoin)\b/g)].map((m) => SYM[m[1]]))];
+  // market selection: "nur eth", "only btc and eth", "kein hsk", "सिर्फ़ ETH", "只交易比特币"
+  const mentioned = [
+    ...new Set([
+      ...[...t.matchAll(/\b(hsk|whsk|eth|weth|ether|ethereum|btc|wbtc|bitcoin)\b/g)].map((m) => SYM[m[1]]),
+      ...SYM_INTL.filter(([re]) => re.test(t)).map(([, s]) => s),
+    ]),
+  ];
   if (mentioned.length) {
-    if (/\b(nur|only|just|ausschließlich)\b/.test(t)) patch.markets = { WHSK: false, WETH: false, WBTC: false, ...Object.fromEntries(mentioned.map((s) => [s, true])) };
-    else if (/\b(kein|keine|ohne|no|without|not|nicht|disable)\b/.test(t)) patch.markets = Object.fromEntries(mentioned.map((s) => [s, false]));
-    else if (/\b(auch|also|wieder|enable|add)\b/.test(t)) patch.markets = Object.fromEntries(mentioned.map((s) => [s, true]));
+    if (/\b(nur|only|just|ausschließlich)\b/.test(t) || /सिर्फ़|सिर्फ|केवल/.test(t) || /只|仅/.test(t)) {
+      patch.markets = { WHSK: false, WETH: false, WBTC: false, ...Object.fromEntries(mentioned.map((s) => [s, true])) };
+    } else if (/\b(kein|keine|ohne|no|without|not|nicht|disable)\b/.test(t) || /नहीं|बिना|मत/.test(t) || /不要|不|别|除了/.test(t)) {
+      patch.markets = Object.fromEntries(mentioned.map((s) => [s, false]));
+    } else if (/\b(auch|also|wieder|enable|add)\b/.test(t) || /भी|फिर से/.test(t) || /也|加上|恢复/.test(t)) {
+      patch.markets = Object.fromEntries(mentioned.map((s) => [s, true]));
+    }
   }
 
-  if (/(alle märkte|alles handeln|trade everything|all markets)/.test(t)) patch.markets = { WHSK: true, WETH: true, WBTC: true };
+  if (/(alle märkte|alles handeln|trade everything|all markets)/.test(t) || /सभी बाज़ार|सभी बाजार|सब मार्केट|सभी मार्केट/.test(t) || /所有市场|全部市场|全部交易/.test(t)) {
+    patch.markets = { WHSK: true, WETH: true, WBTC: true };
+  }
 
   if (Object.keys(patch).length) {
-    const r = apply(patch, ctx, de);
-    return { reply: [T(`Übernommen: ${r.changed.join(", ")}.`, `Updated: ${r.changed.join(", ")}.`), ...r.warnings].join(" "), changed: r.changed };
+    const r = apply(patch, ctx, lang);
+    const list = r.changed.join(", ");
+    return { reply: [T({ de: `Übernommen: ${list}.`, en: `Updated: ${list}.`, hi: `अपडेट किया: ${list}।`, zh: `已更新：${list}。` }), ...r.warnings].join(" "), changed: r.changed };
   }
 
   // ---- "why are you not trading?"
-  if (/(warum|wieso|why).*(nicht|nichts|kein|not|nothing|no trade)|(macht|tust|tut) (nichts|nix)|doing nothing|not trading/.test(t)) {
+  if (
+    /(warum|wieso|why).*(nicht|nichts|kein|not|nothing|no trade)|(macht|tust|tut) (nichts|nix)|doing nothing|not trading/.test(t) ||
+    /क्यों.*(नहीं|कुछ नहीं)|कुछ नहीं कर/.test(t) ||
+    /为什么.*(不|没)|没有交易|不交易/.test(t)
+  ) {
     const w = ctx.engine.council.waiting;
     const on = Object.entries(settings.markets).filter(([, v]) => v).map(([k]) => DISPLAY[k]).join(", ");
-    if (settings.agentPaused) return { reply: T("Ich bin pausiert. Schreib „weiter“, dann suche ich wieder nach Setups.", "I'm paused. Say \"resume\" and I'll look for setups again."), changed: [] };
-    if (w) {
+    if (settings.agentPaused) {
       return {
-        reply: T(
-          `Ich warte auf ein Signal. Bestes Setup gerade: ${DISPLAY[w.sym]} mit Score ${fmt(w.score)}, im Profil „${settings.risk}“ brauche ich ${fmt(w.threshold)}. Aktive Märkte: ${on}. Wenn du mehr Trades willst: „aggressiver“ oder „alle Märkte wieder“.`,
-          `I'm waiting for an edge. Best setup right now: ${DISPLAY[w.sym]} at score ${fmt(w.score)}; the "${settings.risk}" profile needs ${fmt(w.threshold)}. Active markets: ${on}. For more trades say "more aggressive" or "trade everything again".`
-        ),
+        reply: T({
+          de: "Ich bin pausiert. Schreib „weiter“, dann suche ich wieder nach Setups.",
+          en: "I'm paused. Say \"resume\" and I'll look for setups again.",
+          hi: "मैं रुका हुआ हूँ। „फिर से शुरू करो“ लिखिए, फिर मैं दोबारा मौक़े ढूँढूँगा।",
+          zh: "我目前处于暂停状态。输入「继续」，我就会重新寻找机会。",
+        }),
+        changed: [],
+      };
+    }
+    if (w) {
+      const name = DISPLAY[w.sym];
+      const s = fmt(w.score);
+      const need = fmt(w.threshold);
+      return {
+        reply: T({
+          de: `Ich warte auf ein Signal. Bestes Setup gerade: ${name} mit Score ${s}, im Profil „${settings.risk}“ brauche ich ${need}. Aktive Märkte: ${on}. Wenn du mehr Trades willst: „aggressiver“ oder „alle Märkte wieder“.`,
+          en: `I'm waiting for an edge. Best setup right now: ${name} at score ${s}; the "${settings.risk}" profile needs ${need}. Active markets: ${on}. For more trades say "more aggressive" or "trade everything again".`,
+          hi: `मैं सही मौक़े का इंतज़ार कर रहा हूँ। अभी सबसे अच्छा सेटअप: ${name}, स्कोर ${s}; „${settings.risk}“ प्रोफ़ाइल को ${need} चाहिए। सक्रिय बाज़ार: ${on}। ज़्यादा ट्रेड चाहिए तो „आक्रामक“ या „सभी बाज़ार“ लिखिए।`,
+          zh: `我在等待交易机会。目前最好的机会：${name}，评分 ${s}；「${settings.risk}」模式需要 ${need}。当前市场：${on}。想要更多交易，请说「激进」或「所有市场」。`,
+        }),
         changed: [],
       };
     }
   }
 
   // ---- "what just happened?" -> explain the latest notable events
-  if (/(passiert|happened|warum|why|erklär|explain)/.test(t)) {
+  if (/(passiert|happened|warum|why|erklär|explain)/.test(t) || /क्या हुआ|क्यों|समझाओ/.test(t) || /发生了什么|为什么|解释/.test(t)) {
     const ev = ctx.engine.feedLog.filter((l) => l.tone !== "info" && l.role !== "You").slice(-4);
     if (ev.length) {
       return {
-        reply: T("Das Wichtigste der letzten Minuten:\n", "The latest notable events:\n") + ev.map((l) => `• ${l.role}: ${l.text}`).join("\n"),
+        reply:
+          T({ de: "Das Wichtigste der letzten Minuten:\n", en: "The latest notable events:\n", hi: "पिछले कुछ मिनटों की मुख्य घटनाएँ:\n", zh: "最近几分钟的重要事件：\n" }) +
+          ev.map((l) => `• ${l.role}: ${l.text}`).join("\n"),
         changed: [],
       };
     }
@@ -193,17 +288,26 @@ async function rules(text, ctx, de) {
   // ---- questions -> status
   const lines = [];
   const pnl = state.equity - state.dayStartEquity;
-  lines.push(T(
-    `Kapital ${fmtUsd(state.equity)} USDT (heute ${pnl >= 0 ? "+" : ""}${fmt(pnl)}), realisiert ${fmt(state.realizedPnl)} USDT.`,
-    `Equity ${fmtUsd(state.equity)} USDT (today ${pnl >= 0 ? "+" : ""}${fmt(pnl)}), realized ${fmt(state.realizedPnl)} USDT.`
-  ));
-  if (!state.positions.length) lines.push(T("Keine offenen Positionen.", "No open positions."));
+  const eq = fmtUsd(state.equity);
+  const today = `${pnl >= 0 ? "+" : ""}${fmt(pnl)}`;
+  const real = fmt(state.realizedPnl);
+  lines.push(T({
+    de: `Kapital ${eq} USDT (heute ${today}), realisiert ${real} USDT.`,
+    en: `Equity ${eq} USDT (today ${today}), realized ${real} USDT.`,
+    hi: `पूँजी ${eq} USDT (आज ${today}), रियलाइज़्ड ${real} USDT।`,
+    zh: `资产 ${eq} USDT（今日 ${today}），已实现盈亏 ${real} USDT。`,
+  }));
+  if (!state.positions.length) lines.push(T({ de: "Keine offenen Positionen.", en: "No open positions.", hi: "कोई खुली पोजीशन नहीं है।", zh: "目前没有持仓。" }));
   for (const p of state.positions) {
     lines.push(`${DISPLAY[p.sym]}: ${fmt(p.quoteIn, 0)} USDT, ${p.pnlPct >= 0 ? "+" : ""}${fmt(p.pnlPct)}% · stop ${fmtPrice(p.stopPrice)} · TP ${fmtPrice(p.tpPrice)}`);
   }
-  lines.push(T(
-    `Profil: ${settings.risk}, ${settings.positionPct}% pro Trade. Sag z. B. „vorsichtiger“, „Stop 3%“, „nur ETH“ oder „alles schließen“.`,
-    `Profile: ${settings.risk}, ${settings.positionPct}% per trade. Try "more careful", "stop 3%", "only ETH" or "close everything".`
-  ));
+  const prof = settings.risk;
+  const per = settings.positionPct;
+  lines.push(T({
+    de: `Profil: ${prof}, ${per}% pro Trade. Sag z. B. „vorsichtiger“, „Stop 3%“, „nur ETH“ oder „alles schließen“.`,
+    en: `Profile: ${prof}, ${per}% per trade. Try "more careful", "stop 3%", "only ETH" or "close everything".`,
+    hi: `प्रोफ़ाइल: ${prof}, हर ट्रेड में ${per}%। उदाहरण: „सावधान रहो“, „स्टॉप लॉस 3%“, „सिर्फ़ ETH“ या „सब पोजीशन बंद करो“।`,
+    zh: `模式：${prof}，每笔 ${per}%。可以说：「保守一点」「止损3%」「只交易ETH」或「全部平仓」。`,
+  }));
   return { reply: lines.join("\n"), changed: [] };
 }

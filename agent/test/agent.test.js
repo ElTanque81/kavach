@@ -38,3 +38,11 @@ test("precheck mirrors the on-chain rules", () => {
   assert.equal(precheck({ ...base, exposure: 5500 }, m, 1000, 300, 600), "ExposureTooHigh");
   assert.equal(precheck({ ...base, paused: true }, m, 100, 300, 600), "VaultPaused");
 });
+
+import { detectLang } from "../src/chat.js";
+test("chat answers in the language it is asked in", () => {
+  assert.equal(detectLang("कैसा चल रहा है?"), "hi");
+  assert.equal(detectLang("现在怎么样？"), "zh");
+  assert.equal(detectLang("Wie läuft es?"), "de");
+  assert.equal(detectLang("How am I doing?"), "en");
+});

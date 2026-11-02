@@ -5,7 +5,8 @@
 Built for the HSK Chain Horizon Hackathon (Mumbai edition), Track 1: AI Agent Trading.
 *Kavach* (कवच) is Hindi for armour.
 
-**Demo video:** https://youtu.be/ooxRfDhLhd0
+**Demo video:** https://youtu.be/ooxRfDhLhd0  
+**Live demo (replay in your browser):** https://eltanque81.github.io/kavach/
 
 ---
 
@@ -58,7 +59,7 @@ A council of five roles writes every decision into a readable feed (and, in live
 
 A separate **keeper bot** (`npm run keeper`) can be run by anyone.
 
-**Chat control** in German or English: "How am I doing?", "be more careful", "stop-loss 3%", "only ETH and BTC", "close everything", "what just happened?". The chat moves the agent only inside the on-chain policy; asking for a 30% position answers that the contract caps it at 20% and only the owner wallet can change that.
+**Chat control** in English, German, Hindi and Chinese: "How am I doing?", "be more careful", "stop-loss 3%", "only ETH and BTC", "close everything", "what just happened?". The chat moves the agent only inside the on-chain policy; asking for a 30% position answers that the contract caps it at 20% and only the owner wallet can change that.
 
 ## Run it
 
